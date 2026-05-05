@@ -3,17 +3,11 @@ import ChatWindow from "./windows/ChatWindow";
 import SettingsWindow from "./windows/SettingsWindow";
 
 function App() {
-  const searchParams = new URLSearchParams(window.location.search);
-  const windowType = searchParams.get("window");
+  const hash = window.location.hash;
 
-  switch (windowType) {
-    case "chat":
-      return <ChatWindow />;
-    case "settings":
-      return <SettingsWindow />;
-    default:
-      return <PetWindow />;
-  }
+  if (hash === "#/chat") return <ChatWindow />;
+  if (hash === "#/settings") return <SettingsWindow />;
+  return <PetWindow />;
 }
 
 export default App;
