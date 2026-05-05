@@ -60,14 +60,9 @@ function SettingsWindow() {
     emit("settings-updated", {}).catch(() => {});
   };
 
-  // Close window via Tauri command on close button click
-  const handleClose = () => {
-    invoke("close_window", { label: "settings" }).catch(() => {});
-  };
-
   return (
     <div className="settings-window-root">
-      <SettingsPanel onClose={handleClose} />
+      <SettingsPanel onSaved={handleSaved} />
     </div>
   );
 }
