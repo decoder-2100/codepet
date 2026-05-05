@@ -7,9 +7,6 @@ export function useAutoHide() {
 
   function isPanelOpen(): boolean {
     return !!(
-      document.querySelector(".settings-panel") ||
-      document.querySelector(".pet-customizer") ||
-      document.querySelector(".doubao-panel") ||
       document.querySelector(".context-menu") ||
       document.querySelector(".speech-bubble")
     );
