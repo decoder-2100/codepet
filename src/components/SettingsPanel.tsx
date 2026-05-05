@@ -5,6 +5,7 @@ import { SKINS } from "../data/skins";
 import { Sound } from "../utils/sound";
 import { PERSONALITIES, AVAILABLE_SKILLS } from "../types";
 import type { AppSettings, LlmConfig, Personality } from "../types";
+import { normalizeSettings } from "../utils/normalizeSettings";
 import PetCustomizer from "./PetCustomizer";
 
 interface Props {
@@ -56,51 +57,6 @@ function modelHint(provider: string): string {
 }
 
 type Tab = "character" | "customizer" | "llm" | "general";
-
-/** Normalize nested snake_case fields from Tauri IPC to camelCase */
-function normalizeSettings(s: any): AppSettings {
-  if (!s) return s;
-  return {
-    skin: s.skin ?? "matrix",
-    soundEnabled: s.soundEnabled ?? s.sound_enabled ?? true,
-    reminderInterval: s.reminderInterval ?? s.reminder_interval ?? 120,
-    autoHide: s.autoHide ?? s.auto_hide ?? true,
-    llm: {
-      provider: s.llm?.provider ?? "deepseek",
-      apiKey: s.llm?.apiKey ?? s.llm?.api_key ?? "",
-      model: s.llm?.model ?? "deepseek-chat",
-      temperature: s.llm?.temperature ?? 0.7,
-      maxTokens: s.llm?.maxTokens ?? s.llm?.max_tokens ?? 1000,
-      topP: s.llm?.topP ?? s.llm?.top_p ?? 0.9,
-      customBaseUrl: s.llm?.customBaseUrl ?? s.llm?.custom_base_url ?? "",
-    },
-    petConfig: s.petConfig
-      ? {
-          parts: {
-            body: s.petConfig.parts?.body ?? "chubby",
-            head: s.petConfig.parts?.head ?? "cat",
-            eyes: s.petConfig.parts?.eyes ?? "normal",
-            mouth: s.petConfig.parts?.mouth ?? "smile",
-            tail: s.petConfig.parts?.tail ?? "cat",
-            accessories: s.petConfig.parts?.accessories ?? [],
-          },
-          colors: {
-            primary: s.petConfig.colors?.primary ?? "#F0A070",
-            secondary: s.petConfig.colors?.secondary ?? "#FAD0B0",
-            eye: s.petConfig.colors?.eye ?? "#3D3835",
-            accessory: s.petConfig.colors?.accessory ?? "#8EA0B0",
-          },
-        }
-      : {
-          parts: { body: "chubby", head: "cat", eyes: "normal", mouth: "smile", tail: "cat", accessories: [] },
-          colors: { primary: "#F0A070", secondary: "#FAD0B0", eye: "#3D3835", accessory: "#8EA0B0" },
-        },
-    petName: s.petName ?? s.pet_name ?? "橘宝",
-    personality: s.personality ?? "humorous",
-    soulMd: s.soulMd ?? s.soul_md ?? "",
-    skills: s.skills ?? [],
-  };
-}
 
 const SettingsPanel = ({ onSaved }: Props) => {
   const storeSettings = usePetStore((s) => s.settings);
@@ -260,9 +216,19 @@ const SettingsPanel = ({ onSaved }: Props) => {
 
       {/* ========== TAB: CUSTOMIZER ========== */}
       {tab === "customizer" && (
-        <PetCustomizer embedded onConfigChange={(config) => {
-          setLocal((prev) => prev ? { ...prev, petConfig: config } : prev);
-        }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <PetCustomizer embedded onConfigChange={(config) => {
+            setLocal((prev) => prev ? { ...prev, petConfig: config } : prev);
+          }} />
+          <button onClick={save} style={btnStyle}>💾 保存外观设置</button>
+          {saveResult && (
+            <div style={{
+              padding: 8, borderRadius: 8, fontSize: 12,
+              background: saveResult.startsWith("✅") ? "rgba(74,222,128,0.1)" : "rgba(248,113,113,0.1)",
+              color: saveResult.startsWith("✅") ? "#16a34a" : "#dc2626",
+            }}>{saveResult}</div>
+          )}
+        </div>
       )}
 
       {/* ========== TAB: LLM ========== */}

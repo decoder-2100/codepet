@@ -12,16 +12,22 @@ interface Props {
   onSettings: () => void;
 }
 
+// Module-level guards so concurrent requests are blocked across menu reopens
+let complimenting = false;
+let roasting = false;
+
 const ContextMenu = ({ x, y, onClose, onChat, onSettings }: Props) => {
-  const [roasting, setRoasting] = useState(false);
-  const [complimenting, setComplimenting] = useState(false);
+  // Read module-level guard on each mount for reactive display
+  const [_complimenting, setComplimenting] = useState(complimenting);
+  const [_roasting, setRoasting] = useState(roasting);
 
   const handleCompliment = async () => {
     if (complimenting) return;
+    complimenting = true;
     setComplimenting(true);
     Sound.click();
     usePetStore.getState().setAnim("happy");
-    usePetStore.getState().showBubble("⏳ 在想一个真诚的夸奖...", 0, "compliment-burst");
+    usePetStore.getState().showBubble("⏳ 在想一个真诚的夸奖...", 10000, "compliment-burst");
     onClose();
 
     try {
@@ -31,16 +37,17 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings }: Props) => {
       const fallback = getRandomCompliment();
       usePetStore.getState().showBubble(fallback, 5000, "compliment-burst");
     } finally {
-      setComplimenting(false);
+      complimenting = false;
     }
   };
 
   const handleRoast = async () => {
     if (roasting) return;
+    roasting = true;
     setRoasting(true);
     Sound.click();
     usePetStore.getState().setAnim("happy");
-    usePetStore.getState().showBubble("⏳ 在想一个新鲜的吐槽...", 0, "roast-burst");
+    usePetStore.getState().showBubble("⏳ 在想一个新鲜的吐槽...", 10000, "roast-burst");
     onClose();
 
     try {
@@ -50,7 +57,7 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings }: Props) => {
       const fallback = getRandomRoast();
       usePetStore.getState().showBubble(fallback, 5000, "roast-burst");
     } finally {
-      setRoasting(false);
+      roasting = false;
     }
   };
 
@@ -75,7 +82,7 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings }: Props) => {
       {items.map((item) => {
         const isRoast = item.label.includes("吐个槽");
         const isCompliment = item.label.includes("夸一夸");
-        const disabled = (isRoast && roasting) || (isCompliment && complimenting);
+        const disabled = (isRoast && _roasting) || (isCompliment && _complimenting);
         const loadingText = isRoast ? "⏳ 吐槽中..." : isCompliment ? "⏳ 夸奖中..." : undefined;
         return (
           <button

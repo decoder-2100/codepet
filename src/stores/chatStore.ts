@@ -54,16 +54,11 @@ function loadSessions(): ChatSession[] {
   }
 }
 
-/**
- * Load sessions from backend (filesystem) — survives window destroy/relaunch.
- * Call this after store initialization to merge backend data into localStorage.
- */
 async function syncFromBackend(): Promise<ChatSession[]> {
   try {
     const json = await invoke<string>("load_chat_sessions");
     const backend: ChatSession[] = JSON.parse(json);
     if (backend.length > 0) {
-      // Merge: backend sessions take priority (more durable), fill localStorage
       const local = loadSessions();
       const merged = new Map<string, ChatSession>();
       for (const s of local) merged.set(s.id, s);
@@ -74,7 +69,6 @@ async function syncFromBackend(): Promise<ChatSession[]> {
         }
       }
       const result = Array.from(merged.values()).sort((a, b) => b.updatedAt - a.updatedAt);
-      // Sync localStorage with merged data
       localStorage.setItem(STORAGE_KEY, JSON.stringify(result));
       return result;
     }
@@ -88,7 +82,6 @@ function persistSessions(sessions: ChatSession[]) {
   try {
     const json = JSON.stringify(sessions);
     localStorage.setItem(STORAGE_KEY, json);
-    // Fire-and-forget: also persist to backend for cross-webview durability
     invoke("save_chat_sessions", { sessionsJson: json }).catch(() => {});
   } catch {
     // localStorage full or unavailable
@@ -96,22 +89,6 @@ function persistSessions(sessions: ChatSession[]) {
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
-  messages: [],
-  isStreaming: false,
-  currentBuffer: "",
-  sessions: loadSessions(),
-  activeSessionId: null,
-  showHistory: false,
-  showSkills: false,
-
-  // ... rest stays the same
-}));
-
-// On module init, sync sessions from backend (filesystem) — catches
-// sessions created in other webviews or previous window sessions.
-syncFromBackend().then((sessions) => {
-  useChatStore.setState({ sessions });
-});
   messages: [],
   isStreaming: false,
   currentBuffer: "",
@@ -194,3 +171,8 @@ syncFromBackend().then((sessions) => {
     persistSessions(updated);
   },
 }));
+
+// On module init, sync sessions from backend filesystem
+syncFromBackend().then((sessions) => {
+  useChatStore.setState({ sessions });
+});
