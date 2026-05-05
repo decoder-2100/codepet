@@ -1,0 +1,11 @@
+node_modules
+dist/
+src-tauri/target/
+src-tauri/gen/
+build_err.txt
+build_log.txt
+error.txt
+check_log.txt
+test_log.txt
+vite_build.txt
+release/
