@@ -40,7 +40,7 @@ fn create_chat_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     let webview_window = WebviewWindowBuilder::new(
         app,
         "chat",
-        WebviewUrl::App("/#/chat".into()),
+        WebviewUrl::App("/".into()),
     )
     .title("聊一聊 - CodePet")
     .inner_size(420.0, 600.0)
@@ -66,7 +66,7 @@ fn create_settings_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     let webview_window = WebviewWindowBuilder::new(
         app,
         "settings",
-        WebviewUrl::App("/#/settings".into()),
+        WebviewUrl::App("/".into()),
     )
     .title("设置 - CodePet")
     .inner_size(460.0, 620.0)
