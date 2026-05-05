@@ -36,11 +36,7 @@ function ChatWindow() {
     };
   }, []);
 
-  return (
-    <div className="chat-window-root">
-      <ChatPanel />
-    </div>
-  );
+  return <ChatPanel />;
 }
 
 export default ChatWindow;

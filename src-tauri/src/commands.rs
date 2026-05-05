@@ -155,6 +155,11 @@ pub fn get_fallback_roasts() -> Vec<String> {
     get_all_roasts()
 }
 
+#[tauri::command]
+pub fn quit_app(app: tauri::AppHandle) {
+    app.exit(0);
+}
+
 fn get_random_fallback_compliment() -> String {
     use rand::Rng;
     let compliments = get_all_compliments();

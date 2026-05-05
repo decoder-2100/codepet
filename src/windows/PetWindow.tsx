@@ -157,8 +157,9 @@ function PetWindow() {
           x={menuPos.x}
           y={menuPos.y}
           onClose={() => setShowMenu(false)}
-          onChat={() => { invoke("open_window", { label: "chat" }).catch(() => {}); setShowMenu(false); }}
-          onSettings={() => { invoke("open_window", { label: "settings" }).catch(() => {}); setShowMenu(false); }}
+          onChat={() => { invoke("open_window", { label: "chat" }).catch((e) => console.error("open chat window:", e)); setShowMenu(false); }}
+          onSettings={() => { invoke("open_window", { label: "settings" }).catch((e) => console.error("open settings window:", e)); setShowMenu(false); }}
+          onQuit={() => { setShowMenu(false); invoke("quit_app").catch(() => {}); }}
         />
       )}
 

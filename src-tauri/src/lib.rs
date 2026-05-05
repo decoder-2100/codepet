@@ -35,6 +35,7 @@ pub fn run() {
             commands::load_chat_sessions,
             commands::get_clipboard_text,
             commands::get_fallback_roasts,
+            commands::quit_app,
             window_manage::open_window,
             window_manage::close_window,
         ])

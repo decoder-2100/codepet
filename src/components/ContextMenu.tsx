@@ -10,13 +10,14 @@ interface Props {
   onClose: () => void;
   onChat: () => void;
   onSettings: () => void;
+  onQuit: () => void;
 }
 
 // Module-level guards so concurrent requests are blocked across menu reopens
 let complimenting = false;
 let roasting = false;
 
-const ContextMenu = ({ x, y, onClose, onChat, onSettings }: Props) => {
+const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
   // Read module-level guard on each mount for reactive display
   const [_complimenting, setComplimenting] = useState(complimenting);
   const [_roasting, setRoasting] = useState(roasting);
@@ -66,10 +67,11 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings }: Props) => {
     { label: "👍 夸一夸 Compliment", action: handleCompliment },
     { label: "😂 吐个槽 Roast", action: handleRoast },
     { label: "⚙️ 设置 Settings", action: onSettings },
+    { label: "🚪 退出 Quit", action: onQuit },
   ];
 
   const menuWidth = 175;
-  const menuHeight = 135;
+  const menuHeight = 170;
   const clampedX = Math.min(x, window.innerWidth - menuWidth);
   const clampedY = Math.min(y, window.innerHeight - menuHeight);
 
