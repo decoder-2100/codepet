@@ -75,9 +75,7 @@ function ChatWindow() {
 
   return (
     <div className="chat-window-root">
-      <ChatPanel
-        onClose={() => invoke("close_window", { label: "chat" }).catch(() => {})}
-      />
+      <ChatPanel />
     </div>
   );
 }
