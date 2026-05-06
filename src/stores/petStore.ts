@@ -21,6 +21,9 @@ interface PetStore {
   settings: AppSettings | null;
   petConfig: PetConfig;
 
+  // UI state
+  chatOpen: boolean;
+
   // Actions
   setPose: (pose: PetPose) => void;
   setAnim: (name: string) => void;
@@ -28,6 +31,7 @@ interface PetStore {
   setCrushing: (v: boolean) => void;
   showBubble: (text: string, durationMs?: number, animClass?: string) => void;
   hideBubble: () => void;
+  toggleChat: () => void;
   updateKpm: (kpm: number) => void;
   tickMinute: () => void;
   resetCodingTime: () => void;
@@ -36,13 +40,14 @@ interface PetStore {
 }
 
 export const usePetStore = create<PetStore>((set) => ({
-  pose: "lying",
-  currentAnim: "lying",
+  pose: "idle",
+  currentAnim: "idle",
   isVisible: true,
   isCrushing: false,
   bubbleText: "",
   bubbleVisible: false,
   bubbleAnimClass: null,
+  chatOpen: false,
   kpm: 0,
   cumulativeCodingMinutes: 0,
   settings: null,
@@ -66,6 +71,7 @@ export const usePetStore = create<PetStore>((set) => ({
     }
   },
   hideBubble: () => set({ bubbleVisible: false, bubbleAnimClass: null }),
+  toggleChat: () => set((s) => ({ chatOpen: !s.chatOpen })),
   updateKpm: (kpm) => set({ kpm }),
   tickMinute: () =>
     set((s) => ({ cumulativeCodingMinutes: s.kpm > 0 ? s.cumulativeCodingMinutes + 1 : 0 })),

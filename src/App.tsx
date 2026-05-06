@@ -1,19 +1,14 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import PetWindow from "./windows/PetWindow";
-import ChatWindow from "./windows/ChatWindow";
 import SettingsWindow from "./windows/SettingsWindow";
 
 function App() {
-  const label = getCurrentWindow().label;
+  const hash = window.location.hash;
 
-  switch (label) {
-    case "chat":
-      return <ChatWindow />;
-    case "settings":
-      return <SettingsWindow />;
-    default:
-      return <PetWindow />;
+  if (hash === "#/settings") {
+    return <SettingsWindow />;
   }
+
+  return <PetWindow />;
 }
 
 export default App;
