@@ -3,7 +3,6 @@ mod keyboard;
 mod llm;
 mod settings;
 mod tray;
-#[allow(dead_code)]
 mod window_manage;
 
 pub fn run() {
@@ -12,8 +11,8 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
-            // 用 Rust 代码创建窗口，确保透明设置正确生效
             window_manage::create_pet_window(app)?;
+            window_manage::create_settings_window(app.handle())?;
             tray::create_tray(app)?;
             let handle = app.handle().clone();
             std::thread::spawn(move || {
@@ -38,6 +37,7 @@ pub fn run() {
             commands::quit_app,
             window_manage::open_window,
             window_manage::close_window,
+            window_manage::set_window_ignore_cursor_events,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

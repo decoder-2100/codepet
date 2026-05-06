@@ -1,4 +1,4 @@
-/// 窗口管理：宠物窗（透明无边框）+ 对话窗 + 设置窗
+/// 窗口管理：宠物窗（透明无边框）+ 设置窗
 
 use tauri::{Manager, WebviewWindowBuilder, WebviewUrl, AppHandle, WebviewWindow};
 
@@ -7,7 +7,7 @@ pub fn create_pet_window(app: &tauri::App) -> tauri::Result<WebviewWindow> {
     let webview_window = WebviewWindowBuilder::new(
         app,
         "main",
-        WebviewUrl::App("/".into()),
+        WebviewUrl::App("index.html".into()),
     )
     .title("CodePet")
     .inner_size(200.0, 280.0)
@@ -24,49 +24,12 @@ pub fn create_pet_window(app: &tauri::App) -> tauri::Result<WebviewWindow> {
     Ok(webview_window)
 }
 
-/// 创建对话窗：420×600，正常窗口装饰，可缩放
-fn create_chat_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
-    let pet_window = app.get_webview_window("main");
-    let (x, y) = if let Some(ref pet_win) = pet_window {
-        if let (Ok(pos), Ok(size)) = (pet_win.outer_position(), pet_win.outer_size()) {
-            (pos.x + size.width as i32 + 8, pos.y + 40)
-        } else {
-            (400, 200)
-        }
-    } else {
-        (400, 200)
-    };
-
-    let webview_window = WebviewWindowBuilder::new(
-        app,
-        "chat",
-        WebviewUrl::App("/".into()),
-    )
-    .title("聊一聊 - CodePet")
-    .inner_size(420.0, 600.0)
-    .min_inner_size(350.0, 400.0)
-    .decorations(true)
-    .shadow(true)
-    .transparent(false)
-    .always_on_top(false)
-    .resizable(true)
-    .skip_taskbar(false)
-    .visible(true)
-    .build()?;
-
-    let _ = webview_window.set_position(tauri::Position::Physical(
-        tauri::PhysicalPosition { x, y },
-    ));
-
-    Ok(webview_window)
-}
-
-/// 创建设置窗：460×620，正常窗口装饰，可缩放
-fn create_settings_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
+/// 创建设置窗：460×620，正常窗口装饰，可缩放（启动时预创建，默认隐藏）
+pub fn create_settings_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     let webview_window = WebviewWindowBuilder::new(
         app,
         "settings",
-        WebviewUrl::App("/".into()),
+        WebviewUrl::App("index.html#/settings".into()),
     )
     .title("设置 - CodePet")
     .inner_size(460.0, 620.0)
@@ -77,8 +40,7 @@ fn create_settings_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     .always_on_top(false)
     .resizable(true)
     .skip_taskbar(false)
-    .visible(true)
-    .center()
+    .visible(false)
     .build()?;
 
     Ok(webview_window)
@@ -102,18 +64,13 @@ fn position_bottom_right(window: &tauri::WebviewWindow) {
 /// 打开或聚焦窗口（按需创建）
 #[tauri::command]
 pub fn open_window(app: AppHandle, label: String) -> Result<(), String> {
-    // 如果窗口已存在，直接显示并聚焦
     if let Some(window) = app.get_webview_window(&label) {
         let _ = window.show();
         let _ = window.set_focus();
         return Ok(());
     }
 
-    // 否则创建新窗口
     match label.as_str() {
-        "chat" => {
-            create_chat_window(&app).map_err(|e| e.to_string())?;
-        }
         "settings" => {
             create_settings_window(&app).map_err(|e| e.to_string())?;
         }
@@ -131,5 +88,17 @@ pub fn close_window(app: AppHandle, label: String) -> Result<(), String> {
         Ok(())
     } else {
         Err(format!("Window '{}' not found", label))
+    }
+}
+
+/// 设置窗口点击穿透
+#[tauri::command]
+pub fn set_window_ignore_cursor_events(app: AppHandle, ignore: bool) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window
+            .set_ignore_cursor_events(ignore)
+            .map_err(|e| e.to_string())
+    } else {
+        Err("Window not found".into())
     }
 }

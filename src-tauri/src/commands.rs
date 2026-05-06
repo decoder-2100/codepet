@@ -3,7 +3,7 @@ use crate::llm::HistoryMessage;
 use crate::settings::AppSettings;
 use std::path::PathBuf;
 use std::sync::OnceLock;
-use tauri::Emitter;
+use tauri::{Emitter, Manager};
 
 fn sessions_path() -> PathBuf {
     let mut path = std::env::current_exe()
@@ -157,6 +157,15 @@ pub fn get_fallback_roasts() -> Vec<String> {
 
 #[tauri::command]
 pub fn quit_app(app: tauri::AppHandle) {
+    eprintln!("[quit_app] Initiating graceful shutdown...");
+    // Close all non-main windows first
+    for label in ["chat", "settings"] {
+        if let Some(window) = app.get_webview_window(label) {
+            eprintln!("[quit_app] Closing window: {}", label);
+            let _ = window.close();
+        }
+    }
+    eprintln!("[quit_app] Exiting with code 0");
     app.exit(0);
 }
 
