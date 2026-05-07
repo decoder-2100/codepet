@@ -25,8 +25,8 @@ describe("F1.1: Pet parts rendering system", () => {
   };
 
   describe("body variants", () => {
-    it("should export all 4 body variants", () => {
-      expect(Object.keys(bodyVariants)).toEqual(["chubby", "tall", "round", "robot"]);
+    it("should export all 6 body variants", () => {
+      expect(Object.keys(bodyVariants)).toEqual(["chubby", "tall", "round", "robot", "golden", "husky"]);
     });
 
     it("each body variant should be a callable function", () => {
@@ -37,14 +37,16 @@ describe("F1.1: Pet parts rendering system", () => {
   });
 
   describe("head variants", () => {
-    it("should export all 5 head variants", () => {
+    it("should export all 7 head variants", () => {
       const headKeys = Object.keys(headVariants);
       expect(headKeys).toContain("cat");
       expect(headKeys).toContain("bear");
       expect(headKeys).toContain("fox");
       expect(headKeys).toContain("robot");
       expect(headKeys).toContain("alien");
-      expect(headKeys.length).toBe(5);
+      expect(headKeys).toContain("golden");
+      expect(headKeys).toContain("husky");
+      expect(headKeys.length).toBe(7);
     });
 
     it("each head variant should be a callable function", () => {
@@ -55,8 +57,8 @@ describe("F1.1: Pet parts rendering system", () => {
   });
 
   describe("eye variants", () => {
-    it("should export all 7 eye variants", () => {
-      const expected = ["normal", "big", "anime", "dot", "angry", "happy", "closed", "dead"];
+    it("should export all 10 eye variants", () => {
+      const expected = ["normal", "big", "anime", "dot", "angry", "happy", "closed", "dead", "warm", "blue"];
       expect(Object.keys(eyeVariants)).toEqual(expected);
     });
 
