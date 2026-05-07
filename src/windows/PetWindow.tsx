@@ -23,7 +23,6 @@ function PetWindow() {
   const [showMenu, setShowMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [avatarActive, setAvatarActive] = useState(false);
-  const [mouseOverPet, setMouseOverPet] = useState(false);
   const chatOpen = usePetStore((s) => s.chatOpen);
   const toggleChat = usePetStore((s) => s.toggleChat);
 
@@ -111,11 +110,12 @@ function PetWindow() {
     }
   }, [chatOpen]);
 
-  // Dynamic cursor ignore: only pass-through when chat is closed, mouse not over pet, and no menu showing
-  useEffect(() => {
-    const shouldIgnore = !chatOpen && !mouseOverPet && !showMenu;
-    invoke("set_window_ignore_cursor_events", { ignore: shouldIgnore }).catch(() => {});
-  }, [chatOpen, mouseOverPet, showMenu]);
+  // NOTE: We do NOT call set_window_ignore_cursor_events from React.
+  // On Windows, set_ignore_cursor_events is all-or-nothing for the entire window.
+  // When true, NO element receives mouse events — including the pet canvas.
+  // The window stays interactive by default.
+  // For click-through on transparent areas, handle it at the OS level in Rust
+  // using a global mouse hook, or accept the transparent area captures clicks.
 
   // Avatar mousedown: distinguish click from drag
   const handleAvatarMouseDown = useCallback((e: React.MouseEvent) => {
