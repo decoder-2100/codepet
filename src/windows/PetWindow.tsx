@@ -64,6 +64,17 @@ function PetWindow() {
     };
   }, []);
 
+  // Listen for crash-recovery event from Rust (previous session crashed)
+  useEffect(() => {
+    const unlisten = listen("crash-recovery", () => {
+      console.warn("[crash-recovery] Previous session crash detected");
+      usePetStore.getState().showBubble("宠物刚才睡着了，现在回来了", 5000);
+    });
+    return () => {
+      unlisten.then((f) => f());
+    };
+  }, []);
+
   // Listen for settings-updated events to refresh config
   useEffect(() => {
     const unlisten = listen("settings-updated", async () => {
