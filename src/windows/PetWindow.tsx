@@ -23,6 +23,7 @@ function PetWindow() {
   const [showMenu, setShowMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [avatarActive, setAvatarActive] = useState(false);
+  const [mouseOverPet, setMouseOverPet] = useState(false);
   const chatOpen = usePetStore((s) => s.chatOpen);
   const toggleChat = usePetStore((s) => s.toggleChat);
 
@@ -114,14 +115,11 @@ function PetWindow() {
     }
   }, [chatOpen]);
 
-  // Dynamic cursor ignore: when chat is closed, make window transparent to clicks
+  // Dynamic cursor ignore: only pass-through when chat is closed, mouse not over pet, and no menu showing
   useEffect(() => {
-    if (!chatOpen) {
-      invoke("set_window_ignore_cursor_events", { ignore: true }).catch(() => {});
-    } else {
-      invoke("set_window_ignore_cursor_events", { ignore: false }).catch(() => {});
-    }
-  }, [chatOpen]);
+    const shouldIgnore = !chatOpen && !mouseOverPet && !showMenu;
+    invoke("set_window_ignore_cursor_events", { ignore: shouldIgnore }).catch(() => {});
+  }, [chatOpen, mouseOverPet, showMenu]);
 
   // Avatar mousedown: distinguish click from drag
   const handleAvatarMouseDown = useCallback((e: React.MouseEvent) => {
@@ -185,6 +183,8 @@ function PetWindow() {
         className={`pet-canvas-wrapper${avatarActive ? " active" : ""}${hasMessages ? " has-message" : ""}`}
         onMouseDown={handleAvatarMouseDown}
         onContextMenu={handleContextMenu}
+        onMouseEnter={() => setMouseOverPet(true)}
+        onMouseLeave={() => setMouseOverPet(false)}
         title="点击打开对话，拖动可移动位置"
       >
         <PetCanvas />
