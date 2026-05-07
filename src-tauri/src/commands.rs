@@ -103,7 +103,8 @@ pub async fn llm_chat_stream(
 
 #[tauri::command]
 pub fn llm_stop_stream() {
-    stop_stream();
+    let stop_flag = get_stop_flag();
+    stop_flag.store(true, std::sync::atomic::Ordering::SeqCst);
 }
 
 #[tauri::command]
