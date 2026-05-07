@@ -1,4 +1,5 @@
 mod commands;
+mod errors;
 mod keyboard;
 mod logging;
 mod llm;
