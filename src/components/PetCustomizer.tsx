@@ -215,7 +215,7 @@ const PetCustomizer = ({ onClose, embedded, onConfigChange }: Props) => {
         <button onClick={applyConfig} style={{
           width: "100%",
           padding: "10px",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: "linear-gradient(135deg, #5879FF 0%, #6C5CE7 100%)",
           border: "none",
           borderRadius: 10,
           color: "#fff",

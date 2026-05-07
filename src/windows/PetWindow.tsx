@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { getCurrentWindow, PhysicalPosition, LogicalSize } from "@tauri-apps/api/window";
+import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 import ChatOverlay from "../components/ChatOverlay";
 import ContextMenu from "../components/ContextMenu";
 import SpeechBubble from "../components/SpeechBubble";
@@ -40,19 +40,8 @@ function PetWindow() {
     };
   }, []);
 
-  // Initial window positioning to bottom-right
-  useEffect(() => {
-    try {
-      const win = getCurrentWindow();
-      const screenW = window.screen.availWidth;
-      const screenH = window.screen.availHeight;
-      const x = screenW - COLLAPSED_W - 24;
-      const y = screenH - COLLAPSED_H - 48;
-      win.setPosition(new PhysicalPosition(x, y));
-    } catch {
-      // ignore
-    }
-  }, []);
+  // NOTE: Window positioning is handled by Rust side (position_bottom_right in window_manage.rs).
+  // Do NOT set position from React — window.screen.availWidth/Height are unreliable in WebView context.
 
   // Load settings on mount
   useEffect(() => {
@@ -92,30 +81,26 @@ function PetWindow() {
     };
   }, []);
 
-  // Window resize on chat open/close
+  // Window resize on chat open/close — reposition handled by Rust to stay anchored at bottom-right
+  // Skip initial mount: Rust sets the initial size (200x280) via the builder
+  const isInitialMount = useRef(true);
   useEffect(() => {
-    try {
-      const win = getCurrentWindow();
-      const screenW = window.screen.availWidth;
-      const screenH = window.screen.availHeight;
-      const targetW = chatOpen ? EXPANDED_W : COLLAPSED_W;
-      const targetH = chatOpen ? EXPANDED_H : COLLAPSED_H;
-      // Reposition so the bottom-right corner stays anchored
-      const x = screenW - targetW - 24;
-      const y = screenH - targetH - 48;
-      win.setSize(new LogicalSize(targetW, targetH));
-      win.setPosition(new PhysicalPosition(x, y));
-    } catch {
-      // ignore — setSize may not be available in non-Tauri env
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
     }
+    const targetW = chatOpen ? EXPANDED_W : COLLAPSED_W;
+    const targetH = chatOpen ? EXPANDED_H : COLLAPSED_H;
+    invoke("resize_pet_window", { width: targetW, height: targetH }).catch((e) => {
+      // Fallback: only resize if Rust command unavailable
+      try {
+        const win = getCurrentWindow();
+        win.setSize(new LogicalSize(targetW, targetH));
+      } catch {
+        // ignore
+      }
+    });
   }, [chatOpen]);
-
-  // NOTE: We do NOT call set_window_ignore_cursor_events from React.
-  // On Windows, set_ignore_cursor_events is all-or-nothing for the entire window.
-  // When true, NO element receives mouse events — including the pet canvas.
-  // The window stays interactive by default.
-  // For click-through on transparent areas, handle it at the OS level in Rust
-  // using a global mouse hook, or accept the transparent area captures clicks.
 
   // Avatar mousedown: distinguish click from drag
   const handleAvatarMouseDown = useCallback((e: React.MouseEvent) => {
@@ -179,8 +164,6 @@ function PetWindow() {
         className={`pet-canvas-wrapper${avatarActive ? " active" : ""}${hasMessages ? " has-message" : ""}`}
         onMouseDown={handleAvatarMouseDown}
         onContextMenu={handleContextMenu}
-        onMouseEnter={() => setMouseOverPet(true)}
-        onMouseLeave={() => setMouseOverPet(false)}
         title="点击打开对话，拖动可移动位置"
       >
         <PetCanvas />

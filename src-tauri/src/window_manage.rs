@@ -4,6 +4,7 @@ use tauri::{Manager, WebviewWindowBuilder, WebviewUrl, AppHandle, WebviewWindow}
 
 /// 创建宠物窗：200×280，透明无边框，置顶，不显示在任务栏
 pub fn create_pet_window(app: &tauri::App) -> tauri::Result<WebviewWindow> {
+    // Create hidden first so we can set size and position before showing
     let webview_window = WebviewWindowBuilder::new(
         app,
         "main",
@@ -17,11 +18,46 @@ pub fn create_pet_window(app: &tauri::App) -> tauri::Result<WebviewWindow> {
     .always_on_top(true)
     .resizable(false)
     .skip_taskbar(true)
+    .visible(false)
     .build()?;
 
-    position_bottom_right(&webview_window);
+    // Set size explicitly
+    let _ = webview_window.set_size(tauri::Size::Logical(tauri::LogicalSize {
+        width: 200.0,
+        height: 280.0,
+    }));
+
+    // Position using app handle's primary_monitor (works for hidden windows)
+    position_bottom_right(&webview_window, app.handle());
+
+    // Now show the window at the correct position
+    let _ = webview_window.show();
 
     Ok(webview_window)
+}
+
+/// 定位窗口到右下角（使用已知的窗口尺寸 200x280，通过 app handle 获取 monitor）
+fn position_bottom_right(window: &tauri::WebviewWindow, app: &AppHandle) {
+    // Try window's primary_monitor first, fall back to app's
+    let monitor = window.primary_monitor().ok().flatten()
+        .or_else(|| app.primary_monitor().ok().flatten());
+
+    if let Some(monitor) = monitor {
+        let scale = monitor.scale_factor();
+        let screen = monitor.size();
+        // Known window size: 200x280 logical pixels
+        let logical_x = screen.width as f64 / scale - 200.0 - 24.0;
+        let logical_y = screen.height as f64 / scale - 280.0 - 48.0;
+        eprintln!("[position_bottom_right] monitor: {}x{}, scale: {:.2}, target logical: ({:.0}, {:.0})",
+            screen.width, screen.height, scale, logical_x, logical_y);
+        if let Err(e) = window.set_position(tauri::Position::Logical(
+            tauri::LogicalPosition { x: logical_x, y: logical_y },
+        )) {
+            eprintln!("[position_bottom_right] set_position error: {}", e);
+        }
+    } else {
+        eprintln!("[position_bottom_right] Failed to get primary monitor");
+    }
 }
 
 /// 创建设置窗：460×620，正常窗口装饰，可缩放（启动时预创建，默认隐藏）
@@ -44,21 +80,6 @@ pub fn create_settings_window(app: &AppHandle) -> tauri::Result<WebviewWindow> {
     .build()?;
 
     Ok(webview_window)
-}
-
-/// 定位窗口到右下角
-fn position_bottom_right(window: &tauri::WebviewWindow) {
-    if let Ok(monitor) = window.primary_monitor() {
-        if let Some(monitor) = monitor {
-            let screen = monitor.size();
-            let window_size = window.inner_size().unwrap_or_default();
-            let x = screen.width as i32 - window_size.width as i32 - 24;
-            let y = screen.height as i32 - window_size.height as i32 - 48;
-            let _ = window.set_position(tauri::Position::Physical(
-                tauri::PhysicalPosition { x, y },
-            ));
-        }
-    }
 }
 
 /// 打开或聚焦窗口（按需创建）
@@ -88,6 +109,41 @@ pub fn close_window(app: AppHandle, label: String) -> Result<(), String> {
         Ok(())
     } else {
         Err(format!("Window '{}' not found", label))
+    }
+}
+
+/// Resize and reposition the pet window to stay anchored at bottom-right
+#[tauri::command]
+pub fn resize_pet_window(app: AppHandle, width: f64, height: f64) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        // Set size (logical pixels)
+        if let Err(e) = window.set_size(tauri::Size::Logical(tauri::LogicalSize {
+            width,
+            height,
+        })) {
+            eprintln!("[resize_pet_window] set_size error: {}", e);
+            return Err(e.to_string());
+        }
+        // Brief delay for resize to take effect
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        if let Ok(monitor) = window.primary_monitor() {
+            if let Some(monitor) = monitor {
+                let scale = monitor.scale_factor();
+                let screen = monitor.size();
+                let logical_x = screen.width as f64 / scale - width - 24.0;
+                let logical_y = screen.height as f64 / scale - height - 48.0;
+                eprintln!("[resize_pet_window] monitor: {}x{}, scale: {:.2}, size: {:.0}x{:.0}, target logical: ({:.0}, {:.0})",
+                    screen.width, screen.height, scale, width, height, logical_x, logical_y);
+                if let Err(e) = window.set_position(tauri::Position::Logical(
+                    tauri::LogicalPosition { x: logical_x, y: logical_y },
+                )) {
+                    eprintln!("[resize_pet_window] set_position error: {}", e);
+                }
+            }
+        }
+        Ok(())
+    } else {
+        Err("Pet window not found".into())
     }
 }
 

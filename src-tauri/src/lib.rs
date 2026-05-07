@@ -38,6 +38,7 @@ pub fn run() {
             window_manage::open_window,
             window_manage::close_window,
             window_manage::set_window_ignore_cursor_events,
+            window_manage::resize_pet_window,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
