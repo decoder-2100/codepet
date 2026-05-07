@@ -218,6 +218,105 @@ export const headVariants: Record<string, HeadDrawFn> = {
 
     ctx.restore();
   },
+
+  golden: (ctx, s, c) => {
+    ctx.save();
+    ctx.translate(75 + s.x, 60 + s.y);
+    ctx.rotate((s.rotation * Math.PI) / 180);
+    ctx.scale(s.scaleX, s.scaleY);
+    ctx.globalAlpha = s.opacity;
+
+    // Floppy ears (elongated ovals hanging down from sides)
+    for (const dx of [-22, 22]) {
+      ctx.beginPath();
+      ctx.ellipse(dx, 6, 7, 16, dx > 0 ? 0.2 : -0.2, 0, Math.PI * 2);
+      ctx.fillStyle = darken(c.primary, 8);
+      ctx.fill();
+      // Inner ear highlight
+      ctx.beginPath();
+      ctx.ellipse(dx, 8, 4, 10, dx > 0 ? 0.2 : -0.2, 0, Math.PI * 2);
+      ctx.fillStyle = lighten(c.primary, 30);
+      ctx.fill();
+    }
+
+    // Head with radial gradient
+    const grad = ctx.createRadialGradient(-4, -5, 3, 0, 1, 27);
+    grad.addColorStop(0, lighten(c.primary, 35));
+    grad.addColorStop(0.4, lighten(c.primary, 12));
+    grad.addColorStop(0.75, c.primary);
+    grad.addColorStop(1, darken(c.primary, 8));
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 28, 26, 0, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Cream muzzle oval
+    ctx.beginPath();
+    ctx.ellipse(0, 8, 14, 10, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#F0DCC0";
+    ctx.fill();
+
+    // Dark brown nose
+    ctx.beginPath();
+    ctx.ellipse(0, 3, 4, 3, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#3D2B1F";
+    ctx.fill();
+
+    ctx.restore();
+  },
+
+  husky: (ctx, s, c) => {
+    ctx.save();
+    ctx.translate(75 + s.x, 60 + s.y);
+    ctx.rotate((s.rotation * Math.PI) / 180);
+    ctx.scale(s.scaleX, s.scaleY);
+    ctx.globalAlpha = s.opacity;
+
+    // Pointed upright triangular ears
+    drawRoundedEar(ctx, -20, -10, -32, -40, -8, -20, 5, c);
+    drawRoundedEar(ctx, 20, -10, 32, -40, 8, -20, 5, c);
+
+    // Inner ears (pink)
+    drawRoundedEar(ctx, -18, -12, -26, -34, -10, -20, 3,
+      { primary: "#F0C0C0", secondary: "#F0C0C0", eye: c.eye, accessory: c.accessory });
+    drawRoundedEar(ctx, 18, -12, 26, -34, 10, -20, 3,
+      { primary: "#F0C0C0", secondary: "#F0C0C0", eye: c.eye, accessory: c.accessory });
+
+    // Head
+    const grad = ctx.createRadialGradient(-4, -5, 3, 0, 1, 27);
+    grad.addColorStop(0, lighten(c.primary, 35));
+    grad.addColorStop(0.4, lighten(c.primary, 12));
+    grad.addColorStop(0.75, c.primary);
+    grad.addColorStop(1, darken(c.primary, 8));
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 26, 24, 0, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Grey mask patches around eyes
+    for (const dx of [-10, 10]) {
+      ctx.beginPath();
+      ctx.ellipse(dx, -2, 8, 6, 0, 0, Math.PI * 2);
+      ctx.fillStyle = darken(c.primary, 15);
+      ctx.globalAlpha = 0.25;
+      ctx.fill();
+    }
+    ctx.globalAlpha = s.opacity;
+
+    // White muzzle
+    ctx.beginPath();
+    ctx.ellipse(0, 8, 12, 9, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#F0F0F4";
+    ctx.fill();
+
+    // Black nose
+    ctx.beginPath();
+    ctx.ellipse(0, 4, 3.5, 2.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#1A1A1A";
+    ctx.fill();
+
+    ctx.restore();
+  },
 };
 
 function drawRoundedEar(
