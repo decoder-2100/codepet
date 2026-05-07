@@ -26,10 +26,6 @@ impl AppError {
     pub fn from_io(e: std::io::Error) -> Self {
         AppError::Io(e.to_string())
     }
-
-    pub fn from_serde(e: serde_json::Error) -> Self {
-        AppError::Settings(e.to_string())
-    }
 }
 
 // Allow conversion from anyhow for dynamic errors
