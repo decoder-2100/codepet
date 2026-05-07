@@ -17,7 +17,10 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         .build()?;
 
     let img = image::load_from_memory(include_bytes!("../icons/tray-icon.png"))
-        .expect("failed to decode tray icon")
+        .map_err(|e| {
+            tracing::error!(error = %e, "Failed to decode tray icon");
+            e
+        })?
         .into_rgba8();
     let (width, height) = img.dimensions();
     let icon = tauri::image::Image::new_owned(img.into_raw(), width, height);
@@ -46,7 +49,8 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
                 "quit" => {
-                    app.exit(0);
+                    tracing::info!("Tray quit menu selected");
+                    crate::shutdown::spawn_shutdown(app);
                 }
                 _ => {}
             }

@@ -9,6 +9,8 @@ mod shutdown;
 mod tray;
 mod window_manage;
 
+use tauri::Manager;
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -20,16 +22,22 @@ pub fn run() {
             window_manage::create_pet_window(app)?;
             window_manage::create_settings_window(app.handle())?;
             tray::create_tray(app)?;
+
+            // Register per-window close handler for main window only
+            if let Some(main) = app.get_webview_window("main") {
+                main.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { .. } = event {
+                        tracing::info!("Main window closing, stopping keyboard monitoring");
+                        crate::keyboard::stop_monitoring();
+                    }
+                });
+            }
+
             let handle = app.handle().clone();
             std::thread::spawn(move || {
                 keyboard::start_monitoring(handle);
             });
             Ok(())
-        })
-        .on_window_event(|_app, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
-                crate::keyboard::stop_monitoring();
-            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_settings,
