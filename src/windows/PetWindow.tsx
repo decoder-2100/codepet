@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { getCurrentWindow, PhysicalPosition } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalPosition, LogicalSize } from "@tauri-apps/api/window";
 import ChatOverlay from "../components/ChatOverlay";
 import ContextMenu from "../components/ContextMenu";
 import SpeechBubble from "../components/SpeechBubble";
@@ -104,11 +104,7 @@ function PetWindow() {
       // Reposition so the bottom-right corner stays anchored
       const x = screenW - targetW - 24;
       const y = screenH - targetH - 48;
-      // Use LogicalSize for setSize - cast to avoid TS issue
-      const LogicalSize = (window as any).__TAURI__?.window?.LogicalSize;
-      if (LogicalSize) {
-        win.setSize(new LogicalSize(targetW, targetH));
-      }
+      win.setSize(new LogicalSize(targetW, targetH));
       win.setPosition(new PhysicalPosition(x, y));
     } catch {
       // ignore — setSize may not be available in non-Tauri env
