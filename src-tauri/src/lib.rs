@@ -1,5 +1,6 @@
 mod commands;
 pub mod crash;
+mod errors;
 mod keyboard;
 mod llm;
 mod logging;
