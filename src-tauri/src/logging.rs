@@ -22,7 +22,7 @@ pub fn init_logging() {
             .with_env_filter(filter)
             .init();
 
-        eprintln!("[logging] Initialized: stdout (debug mode)");
+        tracing::info!("Logging initialized: stdout (debug mode)");
     } else {
         // Prod mode: rolling file, INFO level, JSON format
         let log_dir = app_data_dir().join("logs");
@@ -54,7 +54,7 @@ pub fn init_logging() {
             .with(file_layer.and_then(stderr_layer))
             .init();
 
-        eprintln!("[logging] Initialized: file at {:?}", log_dir);
+        tracing::info!("Logging initialized: file at {:?}", log_dir);
     }
 }
 
