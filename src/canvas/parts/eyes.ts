@@ -175,4 +175,81 @@ export const eyeVariants: Record<string, EyesDrawFn> = {
     }
     ctx.restore();
   },
+
+  warm: (ctx, s, c) => {
+    ctx.save();
+    ctx.translate(75 + s.x, 55 + s.y);
+    ctx.scale(s.scaleX, s.scaleY);
+    ctx.globalAlpha = s.opacity;
+    for (const x of [-11, 11]) {
+      // White
+      ctx.beginPath();
+      ctx.ellipse(x, 0, 5, 5.5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      // Warm brown pupil (almond shape via scaleY)
+      ctx.beginPath();
+      ctx.ellipse(x, 0.5, 3, 3.2, 0, 0, Math.PI * 2);
+      ctx.fillStyle = c.eye;
+      ctx.fill();
+      // Highlight
+      ctx.beginPath();
+      ctx.arc(x - 1.2, -2, 1.6, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      ctx.fill();
+    }
+    ctx.restore();
+  },
+
+  blue: (ctx, s, c) => {
+    ctx.save();
+    ctx.translate(75 + s.x, 55 + s.y);
+    ctx.scale(s.scaleX, s.scaleY);
+    ctx.globalAlpha = s.opacity;
+    for (const x of [-11, 11]) {
+      // White
+      ctx.beginPath();
+      ctx.ellipse(x, 0, 5, 5.5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      // Blue pupil with glow effect
+      ctx.beginPath();
+      ctx.ellipse(x, 0.5, 3, 3.2, 0, 0, Math.PI * 2);
+      const pupilGrad = ctx.createRadialGradient(x, 0, 0, x, 0.5, 3.2);
+      pupilGrad.addColorStop(0, lighten(c.eye, 30));
+      pupilGrad.addColorStop(0.7, c.eye);
+      pupilGrad.addColorStop(1, darken(c.eye, 20));
+      ctx.fillStyle = pupilGrad;
+      ctx.fill();
+      // Highlight
+      ctx.beginPath();
+      ctx.arc(x - 1, -1.8, 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      ctx.fill();
+      // Secondary small highlight
+      ctx.beginPath();
+      ctx.arc(x + 1.2, 1.5, 0.8, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.4)";
+      ctx.fill();
+    }
+    ctx.restore();
+  },
 };
+
+function lighten(hex: string, percent: number): string {
+  const num = parseInt(hex.replace("#", ""), 16);
+  if (isNaN(num)) return hex;
+  const r = Math.min(255, ((num >> 16) & 0xff) + percent);
+  const g = Math.min(255, ((num >> 8) & 0xff) + percent);
+  const b = Math.min(255, (num & 0xff) + percent);
+  return `rgb(${r},${g},${b})`;
+}
+
+function darken(hex: string, percent: number): string {
+  const num = parseInt(hex.replace("#", ""), 16);
+  if (isNaN(num)) return hex;
+  const r = Math.max(0, ((num >> 16) & 0xff) - percent);
+  const g = Math.max(0, ((num >> 8) & 0xff) - percent);
+  const b = Math.max(0, (num & 0xff) - percent);
+  return `rgb(${r},${g},${b})`;
+}
