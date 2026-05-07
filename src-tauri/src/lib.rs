@@ -1,3 +1,4 @@
+pub mod crash;
 mod commands;
 mod errors;
 mod keyboard;

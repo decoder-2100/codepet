@@ -2,5 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
+    coderpet_lib::crash::register_panic_hook();
     coderpet_lib::run()
 }
