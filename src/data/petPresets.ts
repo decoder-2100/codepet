@@ -24,11 +24,11 @@ export const PET_PRESETS: PetPreset[] = [
     },
   },
   {
-    name: "bug-bot",
-    label: "BugBot",
+    name: "golden",
+    label: "金毛 Golden Retriever",
     config: {
-      parts: { body: "robot", head: "robot", eyes: "dot", mouth: "straight", tail: "robot", accessories: ["keyboard"] },
-      colors: { primary: "#404A55", secondary: "#5A6570", eye: "#4ADE80", accessory: "#8EA0B0" },
+      parts: { body: "golden", head: "golden", eyes: "warm", mouth: "happy-smile", tail: "golden-tail", accessories: ["bowtie"] },
+      colors: { primary: "#D4A050", secondary: "#E8C880", eye: "#5C3A1E", accessory: "#8B6914" },
     },
   },
   {
@@ -48,11 +48,11 @@ export const PET_PRESETS: PetPreset[] = [
     },
   },
   {
-    name: "meowtrix",
-    label: "Meowtrix",
+    name: "husky",
+    label: "哈士奇 Husky",
     config: {
-      parts: { body: "chubby", head: "cat", eyes: "dead", mouth: "straight", tail: "cat", accessories: ["hat", "keyboard"] },
-      colors: { primary: "#2D2D35", secondary: "#3A3A45", eye: "#4ADE80", accessory: "#505868" },
+      parts: { body: "husky", head: "husky", eyes: "blue", mouth: "smirk", tail: "curled-tail", accessories: ["scarf"] },
+      colors: { primary: "#B0B8C0", secondary: "#F0F0F4", eye: "#4A90D9", accessory: "#5C6B7A" },
     },
   },
 ];
