@@ -51,17 +51,38 @@ fn write_crash_marker(info: &std::panic::PanicHookInfo<'_>, backtrace: &std::bac
     let dir = app_data_dir();
     std::fs::create_dir_all(&dir)?;
 
-    // Simple timestamp
+    // Unix epoch seconds as ISO-like timestamp (no chrono dep needed)
     let timestamp = match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
-        Ok(d) => format!(
-            "{}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
-            1970 + d.as_secs() / 31536000,
-            (d.as_secs() / 31536000) % 12 + 1,
-            (d.as_secs() / 86400) % 28 + 1,
-            (d.as_secs() / 3600) % 24,
-            (d.as_secs() / 60) % 60,
-            d.as_secs() % 60,
-        ),
+        Ok(d) => {
+            let secs = d.as_secs();
+            let days = secs / 86400;
+            let time_of_day = secs % 86400;
+            // Approximate year/month/day from days since epoch (good enough for crash markers)
+            let mut year = 1970;
+            let mut remaining = days;
+            loop {
+                let days_in_year = if (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) { 366 } else { 365 };
+                if remaining < days_in_year { break; }
+                remaining -= days_in_year;
+                year += 1;
+            }
+            let month_days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            let mut month = 0;
+            for (i, &dim) in month_days.iter().enumerate() {
+                let dim = if i == 1 && ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) { 29 } else { dim };
+                if remaining < dim { break; }
+                remaining -= dim;
+                month += 1;
+            }
+            let day = remaining + 1;
+            format!(
+                "{}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
+                year, month + 1, day,
+                time_of_day / 3600,
+                (time_of_day % 3600) / 60,
+                time_of_day % 60,
+            )
+        }
         Err(_) => "unknown".to_string(),
     };
 
