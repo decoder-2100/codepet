@@ -136,6 +136,64 @@ export const bodyVariants: Record<string, BodyDrawFn> = {
 
     ctx.restore();
   },
+
+  golden: (ctx, s, c) => {
+    ctx.save();
+    ctx.translate(75 + s.x, 116 + s.y);
+    ctx.rotate((s.rotation * Math.PI) / 180);
+    ctx.scale(s.scaleX, s.scaleY);
+    ctx.globalAlpha = s.opacity;
+
+    const grad = ctx.createRadialGradient(-4, -6, 4, 0, 2, 38);
+    grad.addColorStop(0, lighten(c.primary, 40));
+    grad.addColorStop(0.35, lighten(c.primary, 15));
+    grad.addColorStop(0.7, c.primary);
+    grad.addColorStop(1, darken(c.primary, 10));
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 30, 36, 0, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Chest fur highlight (lighter cream patch on lower chest)
+    ctx.beginPath();
+    ctx.ellipse(0, 10, 16, 20, 0, 0, Math.PI * 2);
+    const chestGrad = ctx.createRadialGradient(-2, 6, 2, 0, 10, 18);
+    chestGrad.addColorStop(0, lighten(c.secondary, 30));
+    chestGrad.addColorStop(1, "rgba(255,255,255,0.05)");
+    ctx.fillStyle = chestGrad;
+    ctx.fill();
+
+    ctx.restore();
+  },
+
+  husky: (ctx, s, c) => {
+    ctx.save();
+    ctx.translate(75 + s.x, 116 + s.y);
+    ctx.rotate((s.rotation * Math.PI) / 180);
+    ctx.scale(s.scaleX, s.scaleY);
+    ctx.globalAlpha = s.opacity;
+
+    const grad = ctx.createRadialGradient(-4, -6, 4, 0, 2, 36);
+    grad.addColorStop(0, lighten(c.primary, 40));
+    grad.addColorStop(0.35, lighten(c.primary, 15));
+    grad.addColorStop(0.7, c.primary);
+    grad.addColorStop(1, darken(c.primary, 10));
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 28, 34, 0, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // White chest mane (extends from neck down to mid-chest)
+    ctx.beginPath();
+    ctx.ellipse(0, 8, 14, 18, 0, 0, Math.PI * 2);
+    const maneGrad = ctx.createRadialGradient(-2, 4, 2, 0, 8, 16);
+    maneGrad.addColorStop(0, c.secondary);
+    maneGrad.addColorStop(1, "rgba(255,255,255,0.05)");
+    ctx.fillStyle = maneGrad;
+    ctx.fill();
+
+    ctx.restore();
+  },
 };
 
 function lighten(hex: string, percent: number): string {
