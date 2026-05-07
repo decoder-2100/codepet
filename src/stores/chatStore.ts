@@ -82,7 +82,9 @@ function persistSessions(sessions: ChatSession[]) {
   try {
     const json = JSON.stringify(sessions);
     localStorage.setItem(STORAGE_KEY, json);
-    invoke("save_chat_sessions", { sessionsJson: json }).catch(() => {});
+    invoke("save_chat_sessions", { sessionsJson: json }).catch((e) => {
+      console.warn("[chatStore] Failed to save sessions to backend:", e);
+    });
   } catch {
     // localStorage full or unavailable
   }

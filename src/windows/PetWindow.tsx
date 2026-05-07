@@ -51,13 +51,16 @@ function PetWindow() {
         usePetStore.getState().setSettings(normalized);
         usePetStore.getState().setPetConfig(normalized.petConfig);
       })
-      .catch(() => {});
+      .catch((e) => { console.warn("[PetWindow] Failed to load settings:", e); });
   }, []);
 
   // Listen for "open-settings" from tray menu
   useEffect(() => {
     const unlisten = listen("open-settings", () => {
-      invoke("open_window", { label: "settings" }).catch(() => {});
+      invoke("open_window", { label: "settings" }).catch((e) => {
+        console.warn("[PetWindow] Failed to open settings window:", e);
+        usePetStore.getState().showBubble("设置窗口打开失败", 3000);
+      });
     });
     return () => {
       unlisten.then((f) => f());

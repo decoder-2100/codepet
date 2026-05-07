@@ -136,7 +136,7 @@ export default function ChatOverlay({ onClose }: ChatOverlayProps) {
         usePetStore.getState().setSettings(normalized);
         usePetStore.getState().setPetConfig(normalized.petConfig);
       })
-      .catch(() => {});
+      .catch((e) => { console.warn("[ChatOverlay] Failed to load settings:", e); });
   }, []);
 
   // Listen for settings-updated events
@@ -146,8 +146,8 @@ export default function ChatOverlay({ onClose }: ChatOverlayProps) {
         const s: any = await invoke("get_settings");
         const normalized = normalizeSettings(s);
         usePetStore.getState().setSettings(normalized);
-      } catch {
-        // ignore
+      } catch (e) {
+        console.warn("[ChatOverlay] Failed to refresh settings:", e);
       }
     });
     return () => {
