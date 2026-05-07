@@ -5,6 +5,7 @@ mod keyboard;
 mod logging;
 mod llm;
 mod settings;
+mod shutdown;
 mod tray;
 mod window_manage;
 

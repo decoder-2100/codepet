@@ -3,7 +3,7 @@ use crate::llm::HistoryMessage;
 use crate::settings::AppSettings;
 use std::path::PathBuf;
 use std::sync::OnceLock;
-use tauri::{Emitter, Manager};
+use tauri::Emitter;
 
 fn sessions_path() -> PathBuf {
     let mut path = std::env::current_exe()
@@ -35,6 +35,12 @@ static STOP_STREAM: OnceLock<std::sync::atomic::AtomicBool> = OnceLock::new();
 
 fn get_stop_flag() -> &'static std::sync::atomic::AtomicBool {
     STOP_STREAM.get_or_init(|| std::sync::atomic::AtomicBool::new(false))
+}
+
+/// Public function to stop the LLM stream. Called by shutdown.rs.
+pub fn stop_stream() {
+    let stop_flag = get_stop_flag();
+    stop_flag.store(true, std::sync::atomic::Ordering::SeqCst);
 }
 
 #[tauri::command]
@@ -97,8 +103,7 @@ pub async fn llm_chat_stream(
 
 #[tauri::command]
 pub fn llm_stop_stream() {
-    let stop_flag = get_stop_flag();
-    stop_flag.store(true, std::sync::atomic::Ordering::SeqCst);
+    stop_stream();
 }
 
 #[tauri::command]
@@ -156,17 +161,8 @@ pub fn get_fallback_roasts() -> Vec<String> {
 }
 
 #[tauri::command]
-pub fn quit_app(app: tauri::AppHandle) {
-    eprintln!("[quit_app] Initiating graceful shutdown...");
-    // Close all non-main windows first
-    for label in ["chat", "settings"] {
-        if let Some(window) = app.get_webview_window(label) {
-            eprintln!("[quit_app] Closing window: {}", label);
-            let _ = window.close();
-        }
-    }
-    eprintln!("[quit_app] Exiting with code 0");
-    app.exit(0);
+pub async fn quit_app(app: tauri::AppHandle) {
+    crate::shutdown::graceful_shutdown(&app).await;
 }
 
 fn get_random_fallback_compliment() -> String {
