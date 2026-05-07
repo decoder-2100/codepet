@@ -1,11 +1,9 @@
-pub mod crash;
 mod commands;
-mod errors;
+pub mod crash;
 mod keyboard;
-mod logging;
 mod llm;
+mod logging;
 mod settings;
-mod shutdown;
 mod tray;
 mod window_manage;
 
@@ -52,5 +50,8 @@ pub fn run() {
             window_manage::resize_pet_window,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .unwrap_or_else(|e| {
+            tracing::error!(error = %e, "Tauri runtime failed");
+            std::process::exit(1);
+        });
 }

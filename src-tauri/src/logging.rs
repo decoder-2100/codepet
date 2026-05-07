@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, Layer, EnvFilter};
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 
 /// Initialize the tracing subscriber.
 ///
@@ -22,7 +22,7 @@ pub fn init_logging() {
             .with_env_filter(filter)
             .init();
 
-        tracing::info!("Logging initialized: stdout (debug mode)");
+        eprintln!("[logging] Initialized: stdout (debug mode)");
     } else {
         // Prod mode: rolling file, INFO level, JSON format
         let log_dir = app_data_dir().join("logs");
@@ -54,7 +54,7 @@ pub fn init_logging() {
             .with(file_layer.and_then(stderr_layer))
             .init();
 
-        tracing::info!("Logging initialized: file at {:?}", log_dir);
+        eprintln!("[logging] Initialized: file at {:?}", log_dir);
     }
 }
 
