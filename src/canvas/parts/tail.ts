@@ -155,4 +155,62 @@ export const tailVariants: Record<string, TailDrawFn> = {
 
     ctx.restore();
   },
+
+  "golden-tail": (ctx, s, c) => {
+    ctx.save();
+    ctx.translate(75 + s.x, 118 + s.y);
+    ctx.rotate((s.rotation * Math.PI) / 180);
+    ctx.scale(s.scaleX, s.scaleY);
+    ctx.globalAlpha = s.opacity;
+
+    // Thick bushy S-curve
+    ctx.beginPath();
+    ctx.moveTo(-8, 0);
+    ctx.quadraticCurveTo(-28, -10, -24, -38);
+    ctx.quadraticCurveTo(-22, -52, -14, -46);
+    ctx.strokeStyle = c.primary;
+    ctx.lineWidth = 9;
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    // Lighter tip highlight
+    ctx.beginPath();
+    ctx.moveTo(-20, -36);
+    ctx.quadraticCurveTo(-18, -48, -14, -46);
+    ctx.strokeStyle = lighten(c.primary, 35);
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    ctx.restore();
+  },
+
+  "curled-tail": (ctx, s, c) => {
+    ctx.save();
+    ctx.translate(75 + s.x, 118 + s.y);
+    ctx.rotate((s.rotation * Math.PI) / 180);
+    ctx.scale(s.scaleX, s.scaleY);
+    ctx.globalAlpha = s.opacity;
+
+    // Curled upward tail (husky characteristic)
+    ctx.beginPath();
+    ctx.moveTo(-8, 0);
+    ctx.quadraticCurveTo(-30, -12, -32, -36);
+    ctx.quadraticCurveTo(-34, -50, -20, -48);
+    ctx.strokeStyle = c.primary;
+    ctx.lineWidth = 9;
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    // White/light tip
+    ctx.beginPath();
+    ctx.moveTo(-28, -34);
+    ctx.quadraticCurveTo(-26, -48, -20, -48);
+    ctx.strokeStyle = c.secondary;
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    ctx.restore();
+  },
 };
