@@ -9,7 +9,7 @@ mod shutdown;
 mod tray;
 mod window_manage;
 
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 pub fn run() {
     tauri::Builder::default()
@@ -19,6 +19,13 @@ pub fn run() {
         .setup(|app| {
             logging::init_logging();
             tracing::info!("CodePet starting up");
+
+            // Check for crash marker from previous session
+            if let Some(_marker) = crash::check_and_consume_crash_marker() {
+                tracing::warn!("Previous session crash detected");
+                let _ = app.handle().emit("crash-recovery", ());
+            }
+
             window_manage::create_pet_window(app)?;
             window_manage::create_settings_window(app.handle())?;
             tray::create_tray(app)?;
