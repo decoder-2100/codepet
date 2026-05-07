@@ -1,6 +1,7 @@
 import { usePetStore } from "../stores/petStore";
 import { Sound } from "../utils/sound";
 import { getCrushAscii } from "../canvas/ascii";
+import { invoke } from "@tauri-apps/api/core";
 
 const BugDropZone = () => {
   const handleDragEnter = (e: React.DragEvent) => {
@@ -37,7 +38,6 @@ const BugDropZone = () => {
 
     // Try AI analysis first, fallback to static
     try {
-      const { invoke } = await import("@tauri-apps/api/core");
       const analysis = await invoke<string>("crush_bug", { errorText });
       usePetStore.getState().setPose("crushing");
       usePetStore.getState().setAnim("crushing");
