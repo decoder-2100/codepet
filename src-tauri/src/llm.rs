@@ -1,8 +1,10 @@
+use crate::errors::AppError;
 use crate::settings::AppSettings;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::time::Duration;
+use tracing;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HistoryMessage {
@@ -122,15 +124,23 @@ impl LlmClient {
         )
     }
 
-    pub async fn chat(&self, prompt: &str, scenario: &str, history: &[HistoryMessage]) -> Result<String, String> {
+    #[tracing::instrument(skip_all, err)]
+    pub async fn chat(
+        &self,
+        prompt: &str,
+        scenario: &str,
+        history: &[HistoryMessage],
+    ) -> Result<String, AppError> {
+        tracing::info!(scenario, "LLM chat started");
+
         if self.settings.llm.api_key.is_empty() {
-            return Err("API key not configured".into());
+            return Err(AppError::ApiKeyMissing);
         }
 
         let base_url: String = if !self.settings.llm.custom_base_url.is_empty() {
             self.settings.llm.custom_base_url.trim_end_matches('/').to_string()
         } else if self.settings.llm.provider == "custom" {
-            return Err("Custom provider requires a Base URL".into());
+            return Err(AppError::Llm("Custom provider requires a Base URL".into()));
         } else {
             get_provider_base_url(&self.settings.llm.provider).trim_end_matches('/').to_string()
         };
@@ -164,12 +174,21 @@ impl LlmClient {
             .json(&body)
             .send()
             .await
-            .map_err(|e| format!("Request failed: {}", e))?;
+            .map_err(|e| AppError::Llm(format!("Request failed: {}", e)))?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            tracing::error!(status = %status, body = %body, "LLM API returned error");
+            return Err(AppError::Llm(format!("API error {}: {}", status.as_u16(), body)));
+        }
 
         let data: Value = response
             .json()
             .await
-            .map_err(|e| format!("Parse failed: {}", e))?;
+            .map_err(|e| AppError::Llm(format!("Parse failed: {}", e)))?;
+
+        tracing::info!(bytes = data.to_string().len(), "LLM chat response received");
 
         let content = data["choices"][0]["message"]["content"]
             .as_str()
@@ -179,21 +198,24 @@ impl LlmClient {
         Ok(content)
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn chat_stream(
         &self,
         prompt: &str,
         scenario: &str,
         history: &[HistoryMessage],
         sender: tokio::sync::mpsc::UnboundedSender<String>,
-    ) -> Result<(), String> {
+    ) -> Result<(), AppError> {
+        tracing::info!(scenario, "LLM stream started");
+
         if self.settings.llm.api_key.is_empty() {
-            return Err("API key not configured".into());
+            return Err(AppError::ApiKeyMissing);
         }
 
         let base_url: String = if !self.settings.llm.custom_base_url.is_empty() {
             self.settings.llm.custom_base_url.trim_end_matches('/').to_string()
         } else if self.settings.llm.provider == "custom" {
-            return Err("Custom provider requires a Base URL".into());
+            return Err(AppError::Llm("Custom provider requires a Base URL".into()));
         } else {
             get_provider_base_url(&self.settings.llm.provider).trim_end_matches('/').to_string()
         };
@@ -227,12 +249,13 @@ impl LlmClient {
             .json(&body)
             .send()
             .await
-            .map_err(|e| format!("Request failed: {}", e))?;
+            .map_err(|e| AppError::Llm(format!("Request failed: {}", e)))?;
 
         if !response.status().is_success() {
             let status = response.status();
             let body = response.text().await.unwrap_or_default();
-            return Err(format!("HTTP {} — {}", status.as_u16(), body));
+            tracing::error!(status = %status, body = %body, "LLM API returned error");
+            return Err(AppError::Llm(format!("API error {}: {}", status.as_u16(), body)));
         }
 
         let stream = response.bytes_stream();
@@ -240,7 +263,7 @@ impl LlmClient {
         let mut stream = std::pin::pin!(stream);
 
         while let Some(chunk) = stream.next().await {
-            let chunk = chunk.map_err(|e| format!("Stream error: {}", e))?;
+            let chunk = chunk.map_err(|e| AppError::Llm(format!("Stream error: {}", e)))?;
             let chunk_str = String::from_utf8_lossy(&chunk);
 
             for line in chunk_str.lines() {
@@ -264,9 +287,10 @@ impl LlmClient {
         Ok(())
     }
 
-    pub async fn test_connection(&self) -> Result<String, String> {
-        // Simple test with a basic ping
-        self.chat("Say 'OK' if you can hear me, nothing else.", "chat", &[]).await
+    pub async fn test_connection(&self) -> Result<String, AppError> {
+        self.chat("Say 'OK' if you can hear me, nothing else.", "chat", &[])
+            .await
+            .map_err(|e| AppError::Llm(e.to_string()))
     }
 }
 

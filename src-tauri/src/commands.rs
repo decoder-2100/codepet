@@ -1,6 +1,9 @@
+use crate::errors::AppError;
 use crate::llm::LlmClient;
 use crate::llm::HistoryMessage;
 use crate::settings::AppSettings;
+use futures_util::FutureExt;
+use std::panic::AssertUnwindSafe;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 use tauri::Emitter;
@@ -16,16 +19,18 @@ fn sessions_path() -> PathBuf {
 }
 
 #[tauri::command]
-pub fn save_chat_sessions(sessions_json: String) -> Result<(), String> {
+#[tracing::instrument(err)]
+pub fn save_chat_sessions(sessions_json: String) -> Result<(), AppError> {
     let path = sessions_path();
-    std::fs::write(&path, &sessions_json).map_err(|e| e.to_string())
+    std::fs::write(&path, &sessions_json).map_err(AppError::from_io)
 }
 
 #[tauri::command]
-pub fn load_chat_sessions() -> Result<String, String> {
+#[tracing::instrument(err)]
+pub fn load_chat_sessions() -> Result<String, AppError> {
     let path = sessions_path();
     if path.exists() {
-        std::fs::read_to_string(&path).map_err(|e| e.to_string())
+        std::fs::read_to_string(&path).map_err(AppError::from_io)
     } else {
         Ok("[]".into())
     }
@@ -44,32 +49,40 @@ pub fn stop_stream() {
 }
 
 #[tauri::command]
-pub fn get_settings() -> AppSettings {
-    crate::settings::load()
+#[tracing::instrument(err)]
+pub fn get_settings() -> Result<AppSettings, AppError> {
+    Ok(crate::settings::load())
 }
 
 #[tauri::command]
-pub fn save_settings(settings: AppSettings) -> Result<(), String> {
-    crate::settings::save(&settings)
+#[tracing::instrument(err)]
+pub fn save_settings(settings: AppSettings) -> Result<(), AppError> {
+    crate::settings::save(&settings).map_err(|e| AppError::Settings(e))
 }
 
 #[tauri::command]
-pub async fn llm_chat(prompt: String, scenario: String, history: Vec<HistoryMessage>) -> Result<String, String> {
+#[tracing::instrument(skip_all, err)]
+pub async fn llm_chat(
+    prompt: String,
+    scenario: String,
+    history: Vec<HistoryMessage>,
+) -> Result<String, AppError> {
     let settings = crate::settings::load();
     if settings.llm.api_key.is_empty() {
-        return Err("API key not configured".into());
+        return Err(AppError::ApiKeyMissing);
     }
     let client = LlmClient::new(settings);
     client.chat(&prompt, &scenario, &history).await
 }
 
 #[tauri::command]
+#[tracing::instrument(skip_all, err)]
 pub async fn llm_chat_stream(
     app: tauri::AppHandle,
     prompt: String,
     scenario: String,
     history: Vec<HistoryMessage>,
-) -> Result<(), String> {
+) -> Result<(), AppError> {
     let settings = crate::settings::load();
     if settings.llm.api_key.is_empty() {
         let _ = app.emit("llm-error", "API key not configured");
@@ -82,8 +95,18 @@ pub async fn llm_chat_stream(
 
     let app_clone = app.clone();
     tokio::spawn(async move {
-        if let Err(e) = client.chat_stream(&prompt, &scenario, &history, tx).await {
-            let _ = app_clone.emit("llm-error", e);
+        let result = AssertUnwindSafe(client.chat_stream(&prompt, &scenario, &history, tx))
+            .catch_unwind()
+            .await;
+        match result {
+            Ok(Ok(())) => {}
+            Ok(Err(e)) => {
+                tracing::error!(error = %e, "LLM stream failed");
+                let _ = app_clone.emit("llm-error", e.to_string());
+            }
+            Err(_) => {
+                tracing::error!("LLM stream task panicked");
+            }
         }
         let _ = app_clone.emit("llm-done", ());
     });
@@ -102,23 +125,26 @@ pub async fn llm_chat_stream(
 }
 
 #[tauri::command]
+#[tracing::instrument]
 pub fn llm_stop_stream() {
     let stop_flag = get_stop_flag();
     stop_flag.store(true, std::sync::atomic::Ordering::SeqCst);
 }
 
 #[tauri::command]
-pub async fn test_llm_connection() -> Result<String, String> {
+#[tracing::instrument(skip_all, err)]
+pub async fn test_llm_connection() -> Result<String, AppError> {
     let settings = crate::settings::load();
     if settings.llm.api_key.is_empty() {
-        return Err("请先在设置中填写 API Key".into());
+        return Err(AppError::ApiKeyMissing);
     }
     let client = LlmClient::new(settings);
-    client.test_connection().await
+    client.test_connection().await.map_err(|_e| AppError::ConnectionFailed)
 }
 
 #[tauri::command]
-pub async fn crush_bug(error_text: String) -> Result<String, String> {
+#[tracing::instrument(skip_all, err)]
+pub async fn crush_bug(error_text: String) -> Result<String, AppError> {
     let settings = crate::settings::load();
     if settings.llm.api_key.is_empty() {
         Ok(get_fallback_crush_response(&error_text))
@@ -130,7 +156,8 @@ pub async fn crush_bug(error_text: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn random_roast() -> Result<String, String> {
+#[tracing::instrument(skip_all, err)]
+pub async fn random_roast() -> Result<String, AppError> {
     let settings = crate::settings::load();
     if settings.llm.api_key.is_empty() {
         Ok(get_random_fallback_roast())
@@ -141,7 +168,8 @@ pub async fn random_roast() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn random_compliment() -> Result<String, String> {
+#[tracing::instrument(skip_all, err)]
+pub async fn random_compliment() -> Result<String, AppError> {
     let settings = crate::settings::load();
     if settings.llm.api_key.is_empty() {
         Ok(get_random_fallback_compliment())
@@ -152,16 +180,19 @@ pub async fn random_compliment() -> Result<String, String> {
 }
 
 #[tauri::command]
+#[tracing::instrument(skip_all)]
 pub async fn get_clipboard_text() -> Result<String, String> {
     Ok(String::new())
 }
 
 #[tauri::command]
+#[tracing::instrument]
 pub fn get_fallback_roasts() -> Vec<String> {
     get_all_roasts()
 }
 
 #[tauri::command]
+#[tracing::instrument(skip_all)]
 pub async fn quit_app(app: tauri::AppHandle) {
     crate::shutdown::graceful_shutdown(&app).await;
 }

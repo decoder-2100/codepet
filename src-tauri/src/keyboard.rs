@@ -1,20 +1,31 @@
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tauri::Emitter;
 use tauri::AppHandle;
+use tracing;
+
+/// Global flag to signal the keyboard monitoring thread to stop.
+static KEYBOARD_RUNNING: AtomicBool = AtomicBool::new(true);
+
+pub fn stop_monitoring() {
+    KEYBOARD_RUNNING.store(false, Ordering::SeqCst);
+}
 
 pub fn start_monitoring(app_handle: AppHandle) {
     let count = Arc::new(AtomicU32::new(0));
     let c = count.clone();
 
-    std::thread::spawn(move || {
+    let rdev_handle = std::thread::spawn(move || {
         if let Err(e) = rdev::listen(move |event| {
+            if !KEYBOARD_RUNNING.load(Ordering::SeqCst) {
+                return;
+            }
             if let rdev::EventType::KeyPress(_) = event.event_type {
                 c.fetch_add(1, Ordering::SeqCst);
             }
         }) {
-            eprintln!("rdev listen error: {:?}", e);
+            tracing::error!(error = ?e, "rdev listen error");
         }
     });
 
@@ -22,6 +33,9 @@ pub fn start_monitoring(app_handle: AppHandle) {
     let mut prev_count = 0u32;
 
     loop {
+        if !KEYBOARD_RUNNING.load(Ordering::SeqCst) {
+            break;
+        }
         std::thread::sleep(Duration::from_millis(1000));
 
         let elapsed = last_emit.elapsed().as_secs_f64();
@@ -34,4 +48,7 @@ pub fn start_monitoring(app_handle: AppHandle) {
             let _ = app_handle.emit("keyboard-activity", kpm);
         }
     }
+
+    // Let the rdev thread finish draining before we return.
+    let _ = rdev_handle.join();
 }
