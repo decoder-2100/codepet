@@ -1,5 +1,6 @@
 mod commands;
 mod keyboard;
+mod logging;
 mod llm;
 mod settings;
 mod tray;
@@ -11,6 +12,8 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
+            logging::init_logging();
+            tracing::info!("CodePet starting up");
             window_manage::create_pet_window(app)?;
             window_manage::create_settings_window(app.handle())?;
             tray::create_tray(app)?;
@@ -19,6 +22,11 @@ pub fn run() {
                 keyboard::start_monitoring(handle);
             });
             Ok(())
+        })
+        .on_window_event(|_app, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                crate::keyboard::stop_monitoring();
+            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_settings,
