@@ -56,8 +56,11 @@ pub fn get_settings() -> Result<AppSettings, AppError> {
 
 #[tauri::command]
 #[tracing::instrument(err)]
-pub fn save_settings(settings: AppSettings) -> Result<(), AppError> {
-    crate::settings::save(&settings).map_err(|e| AppError::Settings(e))
+pub fn save_settings(app: tauri::AppHandle, settings: crate::settings::AppSettings) -> Result<(), AppError> {
+    crate::settings::save(&settings).map_err(|e| AppError::Settings(e))?;
+    // Notify all windows that settings changed (for multi-window sync)
+    let _ = app.emit("settings-updated", ());
+    Ok(())
 }
 
 const MAX_HISTORY: usize = 12;

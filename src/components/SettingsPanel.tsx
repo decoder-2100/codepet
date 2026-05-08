@@ -90,6 +90,7 @@ const SettingsPanel = ({ onSaved }: Props) => {
     try {
       await invoke("save_settings", { settings: local });
       usePetStore.getState().setSettings(local);
+      usePetStore.getState().setPetConfig(local.petConfig);
       setSaveResult("✅ 保存成功");
       Sound.click();
       onSaved?.();
