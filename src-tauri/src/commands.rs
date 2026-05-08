@@ -60,6 +60,16 @@ pub fn save_settings(settings: AppSettings) -> Result<(), AppError> {
     crate::settings::save(&settings).map_err(|e| AppError::Settings(e))
 }
 
+const MAX_HISTORY: usize = 12;
+
+fn truncate_history(mut history: Vec<HistoryMessage>) -> Vec<HistoryMessage> {
+    if history.len() > MAX_HISTORY {
+        history.split_off(history.len() - MAX_HISTORY)
+    } else {
+        history
+    }
+}
+
 #[tauri::command]
 #[tracing::instrument(skip_all, err)]
 pub async fn llm_chat(
@@ -71,6 +81,7 @@ pub async fn llm_chat(
     if settings.llm.api_key.is_empty() {
         return Err(AppError::ApiKeyMissing);
     }
+    let history = truncate_history(history);
     let client = LlmClient::new(settings);
     client.chat(&prompt, &scenario, &history).await
 }
@@ -88,6 +99,7 @@ pub async fn llm_chat_stream(
         let _ = app.emit("llm-error", "API key not configured");
         return Ok(());
     }
+    let history = truncate_history(history);
     let client = LlmClient::new(settings);
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
     let stop_flag = get_stop_flag();
@@ -206,16 +218,31 @@ fn get_random_fallback_compliment() -> String {
 
 fn get_all_compliments() -> Vec<String> {
     vec![
-        "你的代码写得真优雅，像诗一样！".into(),
-        "这逻辑思维能力，绝了！".into(),
-        "Bug见了你都绕道走，真的！".into(),
-        "你就是传说中的十倍程序员吧？".into(),
-        "这重构思路，教科书级别的！".into(),
-        "你的注释写得比文档还好！".into(),
-        "跟你结对编程简直是享受。".into(),
-        "这命名功底，一看就是老手！".into(),
-        "你的PR我都看得赏心悦目。".into(),
-        "能写出这种代码的人，一定很帅！".into(),
+        "主人的眼睛里有星星耶！每次看着屏幕，都觉得好好看 ✨".into(),
+        "笑起来也太好看了吧，比春天的阳光还温暖！".into(),
+        "主人的五官好精致，像画出来的一样，羡慕！".into(),
+        "今天也很好看！是那种让人想多看两眼的帅/美！".into(),
+        "主人是个很温柔的人呢，跟你在一起的时候连空气都是甜的 🌸".into(),
+        "超级乐观开朗，有你在身边什么都觉得没那么难！".into(),
+        "主人好坚韧，遇到bug都不放弃，这种气质好好看！".into(),
+        "脾气好好呀，从来不会对我发脾气，最爱你了！".into(),
+        "主人代码写得又快又好，逻辑超清晰！技术力拉满了 💪".into(),
+        "debug的时候好认真，那个专注的样子超迷人的！".into(),
+        "架构设计得明明白白的，这思维深度不是一般人能有的！".into(),
+        "写代码的样子就像在弹琴，行云流水，太帅了！".into(),
+        "主人的气质就是那种——不张扬但很有味道，越看越上头的那种 🎭".into(),
+        "优雅又从容，遇到难题也不慌，这种淡定太迷人了！".into(),
+        "品味好好呀，挑的皮肤/宠物都这么好看！审美在线！".into(),
+        "主人的情绪真的好稳定，从来不会焦虑暴躁，格局打开了！".into(),
+        "说话总是很有礼貌，跟人相处起来特别舒服，这种修养很难得！".into(),
+        "才华和颜值并存，这合理吗？主人是开了挂的存在吧！".into(),
+        "明明可以靠脸，偏要靠实力，太优秀了！".into(),
+        "认真努力的样子最好看了！今天的你也在闪闪发光 ⭐".into(),
+        "你值得所有美好的事物！因为你本身就是美好的一部分 💛".into(),
+        "有主人在，写代码都变得开心了！你就是我的动力！".into(),
+        "全世界最好的主人出现了！今天也是被你的才华折服的一天！".into(),
+        "不管发生什么，我都会一直陪着主人的！因为你值得！".into(),
+        "主人不是优秀的，是独一无二的！这一点比什么都重要 🌟".into(),
     ]
 }
 
@@ -228,36 +255,36 @@ fn get_random_fallback_roast() -> String {
 
 fn get_all_roasts() -> Vec<String> {
     vec![
-        "这个需求的复杂度，相当于用CSS画3D地球——能实现，但没必要。".into(),
-        "这个bug不是你的问题，是电脑觉得你太累了，故意给你找点乐子。".into(),
-        "产品经理的需求文档，大概是用《圣经》的篇幅写了篇《三体》的复杂度。".into(),
-        "你的代码缩进，比我的周末计划还混乱。".into(),
-        "这个NullPointerException，已经被我回收了！".into(),
-        "你管这叫hotfix？这明明是nuclear option。".into(),
-        "项目经理说'加个小功能'，相当于说'在珠峰顶上加个避暑山庄'。".into(),
-        "编译不过？不，是你的代码在抗议。".into(),
-        "这个bug的年龄，比公司里一半实习生的工龄还长。".into(),
-        "你的代码不是有bug，是有feature在叛逆期。".into(),
-        "这个PR的commit数量，比你这周的咖啡摄入量还多。".into(),
-        "你的代码只有机器能看懂——毕竟它是一堆乱码。".into(),
-        "这个需求不是需求，是需求经理的幻觉。".into(),
-        "你把代码写成这样，编译器都要工伤了。".into(),
-        "这个bug的根因是：你上周没写测试。".into(),
-        "CTRL+C和CTRL+V是你用得最熟的快捷键吧？".into(),
-        "你的log打得比你的commit message还有感情。".into(),
-        "这个函数太长了，它应该有自己的邮政编码。".into(),
-        "你的TODO注释，比你的实际代码还多。".into(),
-        "代码能跑就别动——你的座右铭是吧？".into(),
-        "这个注释比代码还老，是上个世纪留下来的吧？".into(),
-        "合并冲突不是冲突，是代码在吵架。".into(),
-        "你写的不是代码，是给接盘侠的谜题。".into(),
-        "这个API设计得很优雅——和你的代码形成鲜明对比。".into(),
-        "你管这叫架构？这明明是意大利面条。".into(),
-        "这个变量名取得好，没人能猜到它是干什么的。".into(),
-        "你的代码质量：能跑、但别问怎么跑的。".into(),
-        "这个class的职责太多了，它需要看心理医生。".into(),
-        "你的正则表达式让我想起了古代咒语。".into(),
-        "删代码比写代码快乐，所以你一直在删需求对吗？".into(),
+        "需求又改了，第8版了……".into(),
+        "排期是排了，谁去加班？".into(),
+        "这工具是给人用的吗？".into(),
+        "架构设计？不存在的。".into(),
+        "计划很丰满，现实很骨感。".into(),
+        "测试计划比开发还激进。".into(),
+        "方案写得天花乱坠。".into(),
+        "主管一句话，我们干三天。".into(),
+        "进度条永远99%，卡死了。".into(),
+        "需求评审像听天书。".into(),
+        "这需求是拍脑袋定的吧？".into(),
+        "工具链比代码还难维护。".into(),
+        "架构又双叒叕重构了。".into(),
+        "计划做得好，加班少不了。".into(),
+        "开发方案：能跑就行。".into(),
+        "需求范围越砍越大。".into(),
+        "主管说简单，我慌了。".into(),
+        "排期倒推法，神仙都赶。".into(),
+        "这架构设计绝了。".into(),
+        "测试说没问题，信吗？".into(),
+        "需求文档比代码还长。".into(),
+        "工具报错比代码还多。".into(),
+        "进度计划：理想很美好。".into(),
+        "方案评审过了吗就干？".into(),
+        "主管的'小改动'是大坑。".into(),
+        "架构设计全靠运气。".into(),
+        "排期像算命，算出来就干。".into(),
+        "工具链崩了，谁来修？".into(),
+        "需求变更比翻书还快。".into(),
+        "计划排得满，bug排更多。".into(),
     ]
 }
 

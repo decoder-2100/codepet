@@ -3,8 +3,21 @@ use crate::settings::AppSettings;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::sync::OnceLock;
 use std::time::Duration;
 use tracing;
+
+static LLM_CLIENT: OnceLock<Client> = OnceLock::new();
+
+fn get_http_client() -> &'static Client {
+    LLM_CLIENT.get_or_init(|| {
+        Client::builder()
+            .timeout(Duration::from_secs(120))
+            .read_timeout(Duration::from_secs(10))
+            .build()
+            .unwrap_or_default()
+    })
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HistoryMessage {
@@ -49,12 +62,12 @@ fn build_system_prompt(
     skills: &[String],
 ) -> String {
     let scenario_instruction = match scenario {
-        "roast" => "用户心情不好，需要你幽默吐槽一下。用1-2句话，带技术梗。",
+        "roast" => "用户心情不好，需要你幽默吐槽一下。吐槽主题：主管定需求、排进度、工具难用、开发方案挫、架构设计烂、项目/测试计划太激进等程序员痛点。1-2句话，20字以内。",
         "bug_analysis" => {
             "用户给了一段报错信息。先幽默吐槽一句，再一句话说清原因，一句话给出修复建议。"
         }
         "reminder" => "提醒用户休息。1句话，带点幽默和关怀。",
-        "compliment" => "用户需要被夸奖鼓励。用1-2句话真诚夸赞，可以搞笑但不要嘲讽。",
+        "compliment" => "用户需要被夸奖鼓励。用1-2句话真诚夸奖主人，让人看了很开心。可以从以下维度中选择1-2个来夸：颜值（外貌好看、五官精致、笑起来迷人）、性格（温柔善良、乐观开朗、坚韧勇敢）、技术（代码能力强、逻辑清晰、debug厉害）、气质（优雅从容、有品味、格局大）、修养（有礼貌、情绪稳定、懂得尊重人）、综合（聪明又努力、才华与颜值并存、闪闪发光）。语气像一只真心喜欢主人的小宠物，温暖真诚、不油腻、不敷衍。",
         _ => "陪程序员聊天。回答简短有趣，偶尔自嘲，技术准确。",
     };
 
@@ -99,17 +112,14 @@ fn build_system_prompt(
 }
 
 pub struct LlmClient {
-    client: Client,
+    client: &'static Client,
     settings: AppSettings,
 }
 
 impl LlmClient {
     pub fn new(settings: AppSettings) -> Self {
         Self {
-            client: Client::builder()
-                .timeout(Duration::from_secs(30))
-                .build()
-                .unwrap_or_default(),
+            client: get_http_client(),
             settings,
         }
     }

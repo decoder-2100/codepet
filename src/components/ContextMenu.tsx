@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Sound } from "../utils/sound";
 import { usePetStore } from "../stores/petStore";
+import { streamRegistry } from "../stores/streamStore";
 import { getRandomRoast, getRandomCompliment } from "../canvas/ascii";
 
 interface Props {
@@ -18,49 +19,116 @@ let complimenting = false;
 let roasting = false;
 
 const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
-  // Read module-level guard on each mount for reactive display
   const [_complimenting, setComplimenting] = useState(complimenting);
   const [_roasting, setRoasting] = useState(roasting);
 
-  const handleCompliment = async () => {
+  const handleCompliment = useCallback(() => {
     if (complimenting) return;
     complimenting = true;
     setComplimenting(true);
     Sound.click();
     usePetStore.getState().setAnim("happy");
-    usePetStore.getState().showBubble("⏳ 在想一个真诚的夸奖...", 10000, "compliment-burst");
+    usePetStore.getState().showBubble("⏳ 在想一个真诚的夸奖...", 0, "compliment-burst");
+
+    // Register stream callbacks BEFORE closing menu so the registry is ready
+    streamRegistry.register("compliment", {
+      onToken: (token) => {
+        const store = usePetStore.getState();
+        const current = store.bubbleText || "";
+        if (current.startsWith("⏳")) {
+          store.showBubble(token, 0);
+        } else {
+          store.showBubble(current + token, 0);
+        }
+      },
+      onDone: () => {
+        const store = usePetStore.getState();
+        if (store.bubbleText) {
+          store.showBubble(store.bubbleText, 6000, "compliment-burst");
+        }
+        streamRegistry.clear();
+        complimenting = false;
+        setComplimenting(false);
+      },
+      onError: () => {
+        streamRegistry.clear();
+        const fallback = getRandomCompliment();
+        usePetStore.getState().showBubble(fallback, 5000, "compliment-burst");
+        complimenting = false;
+        setComplimenting(false);
+      },
+    });
+
+    // Close menu after callbacks are registered
     onClose();
 
-    try {
-      const compliment = await invoke("random_compliment") as string;
-      usePetStore.getState().showBubble(compliment, 6000, "compliment-burst");
-    } catch {
+    // Fire the stream (non-streaming fallback uses static content)
+    invoke("llm_chat_stream", {
+      prompt: "请用1-2句话真诚夸奖主人，让人看了很开心。从以下维度中选1-2个来夸，每次选不同的维度：\n\n- **颜值**：外貌好看、五官精致、笑起来迷人、眼睛有星星\n- **性格**：温柔善良、乐观开朗、坚韧勇敢、有耐心\n- **技术**：代码能力强、逻辑清晰、架构思维好、debug厉害\n- **气质**：优雅从容、有品味、有内涵、格局大\n- **修养**：有礼貌、有教养、情绪稳定、懂得尊重人\n- **综合**：聪明又努力、才华与颜值并存、闪闪发光\n\n要求：语气要像一只真心喜欢主人的小宠物，温暖真诚、不油腻、不敷衍。可以带点小俏皮。",
+      scenario: "compliment",
+      history: [],
+    }).catch(() => {
+      streamRegistry.clear();
       const fallback = getRandomCompliment();
       usePetStore.getState().showBubble(fallback, 5000, "compliment-burst");
-    } finally {
       complimenting = false;
-    }
-  };
+      setComplimenting(false);
+    });
+  }, [onClose]);
 
-  const handleRoast = async () => {
+  const handleRoast = useCallback(() => {
     if (roasting) return;
     roasting = true;
     setRoasting(true);
     Sound.click();
     usePetStore.getState().setAnim("happy");
-    usePetStore.getState().showBubble("⏳ 在想一个新鲜的吐槽...", 10000, "roast-burst");
+    usePetStore.getState().showBubble("⏳ 在想一个新鲜的吐槽...", 0, "roast-burst");
+
+    // Register stream callbacks BEFORE closing menu
+    streamRegistry.register("roast", {
+      onToken: (token) => {
+        const store = usePetStore.getState();
+        const current = store.bubbleText || "";
+        if (current.startsWith("⏳")) {
+          store.showBubble(token, 0);
+        } else {
+          store.showBubble(current + token, 0);
+        }
+      },
+      onDone: () => {
+        const store = usePetStore.getState();
+        if (store.bubbleText) {
+          store.showBubble(store.bubbleText, 6000, "roast-burst");
+        }
+        streamRegistry.clear();
+        roasting = false;
+        setRoasting(false);
+      },
+      onError: () => {
+        streamRegistry.clear();
+        const fallback = getRandomRoast();
+        usePetStore.getState().showBubble(fallback, 5000, "roast-burst");
+        roasting = false;
+        setRoasting(false);
+      },
+    });
+
+    // Close menu after callbacks are registered
     onClose();
 
-    try {
-      const roast = await invoke("random_roast") as string;
-      usePetStore.getState().showBubble(roast, 6000, "roast-burst");
-    } catch {
+    // Fire the stream (non-streaming fallback uses static content)
+    invoke("llm_chat_stream", {
+      prompt: "请吐槽一句程序员最懂的梗，主题：主管定需求、排进度、工具难用、开发方案挫、架构设计烂、项目/测试计划太激进等。20字以内，犀利吐槽。",
+      scenario: "roast",
+      history: [],
+    }).catch(() => {
+      streamRegistry.clear();
       const fallback = getRandomRoast();
       usePetStore.getState().showBubble(fallback, 5000, "roast-burst");
-    } finally {
       roasting = false;
-    }
-  };
+      setRoasting(false);
+    });
+  }, [onClose]);
 
   const items = [
     { label: "💬 聊一聊 Chat", action: onChat },
