@@ -187,19 +187,19 @@ canvas { border: none; outline: none; }
 .pet-canvas-wrapper {
   position: absolute;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -55%);
+  right: 4px;
+  transform: translateY(-55%);
   width: 150px;
   height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: grab;
-  z-index: 10;
+  z-index: 200;
   transition: transform 0.2s;
 }
 
-.pet-canvas-wrapper:hover { transform: translate(-50%, -55%) scale(1.05); }
+.pet-canvas-wrapper:hover { transform: translateY(-55%) scale(1.05); }
 .pet-canvas-wrapper.active { animation: pet-wiggle 0.4s ease; }
 .pet-canvas-wrapper.has-message::before {
   content: "";
@@ -312,8 +312,25 @@ canvas { border: none; outline: none; }
 }
 
 .speech-bubble.roast-burst {
-  animation: burst-in 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: spit-out 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   z-index: 1500 !important;
+  font-size: 16px;
+  font-weight: 700;
+  max-width: 200px;
+  background: linear-gradient(135deg, #FFE8E8, #FFD6D6);
+  border-color: rgba(255, 80, 80, 0.6);
+  color: #C0392B;
+  text-shadow: 0 0 8px rgba(255, 80, 80, 0.3);
+}
+
+.speech-bubble.roast-burst .speech-bubble-tail { border-top-color: rgba(255, 80, 80, 0.6); }
+.speech-bubble.roast-burst .speech-bubble-tail::after { border-top-color: #FFE8E8; }
+
+@keyframes spit-out {
+  0%   { transform: scale(0) translateY(10px); opacity: 0; }
+  50%  { transform: scale(1.2) translateY(-5px); opacity: 1; }
+  70%  { transform: scale(0.9) translateY(2px); }
+  100% { transform: scale(1) translateY(0); }
 }
 
 .speech-bubble.roast-wobble { animation: wobble 400ms ease-out; }
@@ -1174,12 +1191,12 @@ canvas { border: none; outline: none; }
 .chat-overlay {
   position: absolute;
   bottom: 0;
-  right: 0;
-  width: calc(100% - 150px);
+  left: 0;
+  width: calc(100% - 76px);
   height: 100%;
   background: var(--cp-bg);
-  border-radius: var(--cp-radius) 0 0 var(--cp-radius);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+  border-radius: 0 var(--cp-radius-sm) var(--cp-radius-sm) 0;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -1187,7 +1204,7 @@ canvas { border: none; outline: none; }
 }
 
 @keyframes chat-overlay-slide-in {
-  from { opacity: 0; transform: translateX(20px); }
+  from { opacity: 0; transform: translateX(-20px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 
