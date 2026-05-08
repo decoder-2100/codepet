@@ -42,13 +42,14 @@ const PARTICLE_SHAPES: ParticleShape[] = ["diamond", "heart", "star", "circle"];
 
 function spawnSparkle(canvasW: number, canvasH: number) {
   const shape = PARTICLE_SHAPES[Math.floor(Math.random() * PARTICLE_SHAPES.length)];
+  // Confine sparkles to a tighter area around the pet's center (x:75, y:90)
   sparkles.push({
-    x: canvasW * 0.25 + Math.random() * canvasW * 0.5,
-    y: canvasH * 0.45 + Math.random() * canvasH * 0.45,
-    vx: (Math.random() - 0.5) * 0.18,
-    vy: -0.08 - Math.random() * 0.18,
+    x: canvasW * 0.38 + Math.random() * canvasW * 0.24,
+    y: canvasH * 0.4 + Math.random() * canvasH * 0.3,
+    vx: (Math.random() - 0.5) * 0.12,
+    vy: -0.06 - Math.random() * 0.12,
     life: 0,
-    maxLife: 2200 + Math.random() * 1800,
+    maxLife: 1800 + Math.random() * 1200,
     size: 1.2 + Math.random() * 1.8,
     color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
     shape,
