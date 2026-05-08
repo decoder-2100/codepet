@@ -13,7 +13,7 @@ pub async fn graceful_shutdown(app: &AppHandle) {
     info!("Producers stopped");
 
     // 2. Wait for tokio tasks to drain
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    tokio::time::sleep(Duration::from_millis(300)).await;
     info!("Tokio tasks given time to drain");
 
     // 3. Close non-main windows
@@ -24,11 +24,13 @@ pub async fn graceful_shutdown(app: &AppHandle) {
         }
     }
 
-    // 4. Final flush
+    // 4. Wait briefly for keyboard thread to drain (with a hard timeout)
     tokio::time::sleep(Duration::from_millis(200)).await;
 
     info!("Shutdown complete, exiting");
     app.exit(0);
+    // Fallback: force-terminate in case app.exit doesn't kill blocking native threads
+    std::process::exit(0);
 }
 
 /// Sync entrypoint for shutdown. Spawns the async shutdown on the tokio runtime.

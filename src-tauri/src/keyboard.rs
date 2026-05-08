@@ -16,18 +16,23 @@ pub fn start_monitoring(app_handle: AppHandle) {
     let count = Arc::new(AtomicU32::new(0));
     let c = count.clone();
 
-    let rdev_handle = std::thread::spawn(move || {
-        if let Err(e) = rdev::listen(move |event| {
-            if !KEYBOARD_RUNNING.load(Ordering::SeqCst) {
-                return;
+    // Spawn rdev listener as a detached thread — we do NOT join it on shutdown
+    // because rdev::listen() on Windows uses a system hook that may never return.
+    std::thread::Builder::new()
+        .name("rdev-keyboard".into())
+        .spawn(move || {
+            if let Err(e) = rdev::listen(move |event| {
+                if !KEYBOARD_RUNNING.load(Ordering::SeqCst) {
+                    return;
+                }
+                if let rdev::EventType::KeyPress(_) = event.event_type {
+                    c.fetch_add(1, Ordering::SeqCst);
+                }
+            }) {
+                tracing::error!(error = ?e, "rdev listen error");
             }
-            if let rdev::EventType::KeyPress(_) = event.event_type {
-                c.fetch_add(1, Ordering::SeqCst);
-            }
-        }) {
-            tracing::error!(error = ?e, "rdev listen error");
-        }
-    });
+        })
+        .ok();
 
     let mut last_emit = Instant::now();
     let mut prev_count = 0u32;
@@ -49,6 +54,6 @@ pub fn start_monitoring(app_handle: AppHandle) {
         }
     }
 
-    // Let the rdev thread finish draining before we return.
-    let _ = rdev_handle.join();
+    // Do NOT join the rdev thread — it may never return on Windows due to
+    // the system hook mechanism. The process exit will kill it anyway.
 }
