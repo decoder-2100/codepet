@@ -39,8 +39,10 @@ const PetCustomizer = ({ onClose, embedded, onConfigChange }: Props) => {
   const [tab, setTab] = useState<Tab>("presets");
   const previewRef = useRef<HTMLCanvasElement | null>(null);
   const playerRef = useRef<AnimationPlayer | null>(null);
+  const configRef = useRef(config);
+  configRef.current = config;
 
-  // Live preview
+  // Live preview — setup once, read config from ref in the loop
   useEffect(() => {
     const canvas = previewRef.current;
     if (!canvas) return;
@@ -61,12 +63,12 @@ const PetCustomizer = ({ onClose, embedded, onConfigChange }: Props) => {
     const ch = 240;
 
     let raf = requestAnimationFrame(function loop(now) {
-      drawFrame(ctx, player, config.parts, config.colors, 16, cw, ch);
+      drawFrame(ctx, player, configRef.current.parts, configRef.current.colors, 16, cw, ch);
       raf = requestAnimationFrame(loop);
     });
 
     return () => cancelAnimationFrame(raf);
-  }, [config]);
+  }, []);
 
   const updatePart = (key: keyof PetConfig["parts"], value: string) => {
     Sound.click();

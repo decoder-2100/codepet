@@ -59,16 +59,11 @@ function modelHint(provider: string): string {
 type Tab = "character" | "customizer" | "llm" | "general";
 
 const SettingsPanel = ({ onSaved }: Props) => {
-  const storeSettings = usePetStore((s) => s.settings);
   const [local, setLocal] = useState<AppSettings | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [saveResult, setSaveResult] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("character");
-
-  useEffect(() => {
-    if (storeSettings) setLocal(normalizeSettings(storeSettings));
-  }, [storeSettings]);
 
   const loadSettings = async () => {
     try {
