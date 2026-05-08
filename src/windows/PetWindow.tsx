@@ -13,6 +13,7 @@ import { useAutoHide } from "../hooks/useAutoHide";
 import { useTheme } from "../hooks/useTheme";
 import { usePetStore } from "../stores/petStore";
 import { normalizeSettings } from "../utils/normalizeSettings";
+import { streamRegistry } from "../stores/streamStore";
 
 const COLLAPSED_W = 200;
 const COLLAPSED_H = 280;
@@ -75,6 +76,19 @@ function PetWindow() {
     });
     return () => {
       unlisten.then((f) => f());
+    };
+  }, []);
+
+  // Global LLM stream event router — listens at app level so tokens
+  // are never missed even if ContextMenu unmounts mid-stream
+  useEffect(() => {
+    const unlisten = listen<string>("llm-token", (e) => streamRegistry.emitToken(e.payload));
+    const unlistenDone = listen("llm-done", () => streamRegistry.emitDone());
+    const unlistenError = listen<string>("llm-error", (e) => streamRegistry.emitError(e.payload));
+    return () => {
+      unlisten.then((f) => f());
+      unlistenDone.then((f) => f());
+      unlistenError.then((f) => f());
     };
   }, []);
 
@@ -181,6 +195,7 @@ function PetWindow() {
         title="点击打开对话，拖动可移动位置"
       >
         <PetCanvas />
+        <SpeechBubble />
       </div>
 
       <BugDropZone />
@@ -198,7 +213,6 @@ function PetWindow() {
         />
       )}
 
-      <SpeechBubble />
       <ReminderToast />
     </div>
   );
