@@ -10,14 +10,14 @@ export const headVariants: Record<string, HeadDrawFn> = {
     ctx.scale(s.scaleX, s.scaleY);
     ctx.globalAlpha = s.opacity;
 
-    // Refined triangular ears with rounded tips
-    drawRoundedEar(ctx, -20, -12, -30, -42, -8, -24, 5, c);
-    drawRoundedEar(ctx, 20, -12, 30, -42, 8, -24, 5, c);
+    // Rounded ears — wider base, shorter, less pointed tip
+    drawRoundedEar(ctx, -22, -10, -28, -34, -10, -22, 6, c);
+    drawRoundedEar(ctx, 22, -10, 28, -34, 10, -22, 6, c);
 
     // Inner ears
-    drawRoundedEar(ctx, -18, -14, -25, -36, -10, -23, 3,
+    drawRoundedEar(ctx, -20, -12, -24, -28, -12, -21, 4,
       { primary: lighten(c.primary, 50), secondary: lighten(c.primary, 50), eye: c.eye, accessory: c.accessory });
-    drawRoundedEar(ctx, 18, -14, 25, -36, 10, -23, 3,
+    drawRoundedEar(ctx, 20, -12, 24, -28, 12, -21, 4,
       { primary: lighten(c.primary, 50), secondary: lighten(c.primary, 50), eye: c.eye, accessory: c.accessory });
 
     // Head with refined gradient
