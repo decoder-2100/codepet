@@ -317,14 +317,14 @@ canvas { border: none; outline: none; }
   font-size: 16px;
   font-weight: 700;
   max-width: 200px;
-  background: linear-gradient(135deg, #FFE8E8, #FFD6D6);
-  border-color: rgba(255, 80, 80, 0.6);
+  background: transparent;
+  border-color: transparent;
   color: #C0392B;
   text-shadow: 0 0 8px rgba(255, 80, 80, 0.3);
 }
 
-.speech-bubble.roast-burst .speech-bubble-tail { border-top-color: rgba(255, 80, 80, 0.6); }
-.speech-bubble.roast-burst .speech-bubble-tail::after { border-top-color: #FFE8E8; }
+.speech-bubble.roast-burst .speech-bubble-tail { border-top-color: transparent; }
+.speech-bubble.roast-burst .speech-bubble-tail::after { border-top-color: transparent; }
 
 @keyframes spit-out {
   0%   { transform: scale(0) translateY(10px); opacity: 0; }
@@ -341,14 +341,14 @@ canvas { border: none; outline: none; }
   font-size: 16px;
   font-weight: 700;
   max-width: 200px;
-  background: linear-gradient(135deg, #FFF8E7, #FFF3D6);
-  border-color: rgba(255, 180, 50, 0.5);
+  background: transparent;
+  border-color: transparent;
   color: #C77D20;
   text-shadow: 0 0 10px rgba(255, 180, 50, 0.4);
 }
 
-.speech-bubble.compliment-burst .speech-bubble-tail { border-top-color: rgba(255, 180, 50, 0.5); }
-.speech-bubble.compliment-burst .speech-bubble-tail::after { border-top-color: #FFF8E7; }
+.speech-bubble.compliment-burst .speech-bubble-tail { border-top-color: transparent; }
+.speech-bubble.compliment-burst .speech-bubble-tail::after { border-top-color: transparent; }
 
 /* ══════════════════════════════════════════
    Reminder Toast
