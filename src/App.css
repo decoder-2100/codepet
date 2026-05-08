@@ -238,7 +238,7 @@ canvas { border: none; outline: none; }
   padding: 8px 12px;
   background: none;
   color: var(--cp-text);
-  font-size: 13px;
+  font-size: 12px;
   text-align: left;
   border-radius: 8px;
   white-space: nowrap;
@@ -1192,7 +1192,7 @@ canvas { border: none; outline: none; }
   position: absolute;
   bottom: 0;
   left: 0;
-  width: calc(100% - 76px);
+  width: calc(100% - 120px);
   height: 100%;
   background: var(--cp-bg);
   border-radius: 0 var(--cp-radius-sm) var(--cp-radius-sm) 0;
