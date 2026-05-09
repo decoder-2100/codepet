@@ -11,7 +11,6 @@ interface PetStore {
   isCrushing: boolean;
   bubbleText: string;
   bubbleVisible: boolean;
-  bubbleAnimClass: string | null;
 
   // Activity
   kpm: number;
@@ -29,7 +28,7 @@ interface PetStore {
   setAnim: (name: string) => void;
   setVisible: (v: boolean) => void;
   setCrushing: (v: boolean) => void;
-  showBubble: (text: string, durationMs?: number, animClass?: string) => void;
+  showBubble: (text: string, durationMs?: number) => void;
   hideBubble: () => void;
   toggleChat: () => void;
   updateKpm: (kpm: number) => void;
@@ -46,7 +45,6 @@ export const usePetStore = create<PetStore>((set) => ({
   isCrushing: false,
   bubbleText: "",
   bubbleVisible: false,
-  bubbleAnimClass: null,
   chatOpen: false,
   kpm: 0,
   cumulativeCodingMinutes: 0,
@@ -60,17 +58,17 @@ export const usePetStore = create<PetStore>((set) => ({
   setAnim: (currentAnim) => set({ currentAnim }),
   setVisible: (isVisible) => set({ isVisible }),
   setCrushing: (isCrushing) => set({ isCrushing }),
-  showBubble: (text, durationMs = 4000, animClass?: string) => {
+  showBubble: (text, durationMs = 4000) => {
     if (bubbleTimer) clearTimeout(bubbleTimer);
-    set({ bubbleText: text, bubbleVisible: true, bubbleAnimClass: animClass ?? null });
+    set({ bubbleText: text, bubbleVisible: true });
     if (durationMs > 0) {
       bubbleTimer = setTimeout(() => {
         bubbleTimer = null;
-        set({ bubbleVisible: false, bubbleAnimClass: null });
+        set({ bubbleVisible: false });
       }, durationMs);
     }
   },
-  hideBubble: () => set({ bubbleVisible: false, bubbleAnimClass: null }),
+  hideBubble: () => set({ bubbleVisible: false }),
   toggleChat: () => set((s) => ({ chatOpen: !s.chatOpen })),
   updateKpm: (kpm) => set({ kpm }),
   tickMinute: () =>

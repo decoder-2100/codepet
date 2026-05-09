@@ -17,10 +17,12 @@ interface Props {
 // Module-level guards so concurrent requests are blocked across menu reopens
 let complimenting = false;
 let roasting = false;
+let tellingJoke = false;
 
 const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
   const [_complimenting, setComplimenting] = useState(complimenting);
   const [_roasting, setRoasting] = useState(roasting);
+  const [_tellingJoke, setTellingJoke] = useState(tellingJoke);
 
   const handleCompliment = useCallback(() => {
     if (complimenting) return;
@@ -28,7 +30,7 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
     setComplimenting(true);
     Sound.click();
     usePetStore.getState().setAnim("happy");
-    usePetStore.getState().showBubble("⏳ 在想一个真诚的夸奖...", 0, "compliment-burst");
+    usePetStore.getState().showBubble("⏳ 在想一个真诚的夸奖...", 0);
 
     // Register stream callbacks BEFORE closing menu so the registry is ready
     streamRegistry.register("compliment", {
@@ -44,7 +46,7 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
       onDone: () => {
         const store = usePetStore.getState();
         if (store.bubbleText) {
-          store.showBubble(store.bubbleText, 6000, "compliment-burst");
+          store.showBubble(store.bubbleText, 6000);
         }
         streamRegistry.clear();
         complimenting = false;
@@ -53,7 +55,7 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
       onError: () => {
         streamRegistry.clear();
         const fallback = getRandomCompliment();
-        usePetStore.getState().showBubble(fallback, 5000, "compliment-burst");
+        usePetStore.getState().showBubble(fallback, 5000);
         complimenting = false;
         setComplimenting(false);
       },
@@ -64,13 +66,13 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
 
     // Fire the stream (non-streaming fallback uses static content)
     invoke("llm_chat_stream", {
-      prompt: "请用1-2句话真诚夸奖主人，让人看了很开心。从以下维度中选1-2个来夸，每次选不同的维度：\n\n- **颜值**：外貌好看、五官精致、笑起来迷人、眼睛有星星\n- **性格**：温柔善良、乐观开朗、坚韧勇敢、有耐心\n- **技术**：代码能力强、逻辑清晰、架构思维好、debug厉害\n- **气质**：优雅从容、有品味、有内涵、格局大\n- **修养**：有礼貌、有教养、情绪稳定、懂得尊重人\n- **综合**：聪明又努力、才华与颜值并存、闪闪发光\n\n要求：语气要像一只真心喜欢主人的小宠物，温暖真诚、不油腻、不敷衍。可以带点小俏皮。",
+      prompt: "请用10个字以内直白地夸奖主人，内容围绕：颜值高、技术精湛、工作态度好，多说彩虹屁。语气像真心喜欢主人的小宠物，温暖真诚。",
       scenario: "compliment",
       history: [],
     }).catch(() => {
       streamRegistry.clear();
       const fallback = getRandomCompliment();
-      usePetStore.getState().showBubble(fallback, 5000, "compliment-burst");
+      usePetStore.getState().showBubble(fallback, 5000);
       complimenting = false;
       setComplimenting(false);
     });
@@ -82,7 +84,7 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
     setRoasting(true);
     Sound.click();
     usePetStore.getState().setAnim("happy");
-    usePetStore.getState().showBubble("⏳ 在想一个新鲜的吐槽...", 0, "roast-burst");
+    usePetStore.getState().showBubble("⏳ 在想一个新鲜的吐槽...", 0);
 
     // Register stream callbacks BEFORE closing menu
     streamRegistry.register("roast", {
@@ -98,7 +100,7 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
       onDone: () => {
         const store = usePetStore.getState();
         if (store.bubbleText) {
-          store.showBubble(store.bubbleText, 6000, "roast-burst");
+          store.showBubble(store.bubbleText, 6000);
         }
         streamRegistry.clear();
         roasting = false;
@@ -107,7 +109,7 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
       onError: () => {
         streamRegistry.clear();
         const fallback = getRandomRoast();
-        usePetStore.getState().showBubble(fallback, 5000, "roast-burst");
+        usePetStore.getState().showBubble(fallback, 5000);
         roasting = false;
         setRoasting(false);
       },
@@ -124,9 +126,58 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
     }).catch(() => {
       streamRegistry.clear();
       const fallback = getRandomRoast();
-      usePetStore.getState().showBubble(fallback, 5000, "roast-burst");
+      usePetStore.getState().showBubble(fallback, 5000);
       roasting = false;
       setRoasting(false);
+    });
+  }, [onClose]);
+
+  const handleJoke = useCallback(() => {
+    if (tellingJoke) return;
+    tellingJoke = true;
+    setTellingJoke(true);
+    Sound.click();
+    usePetStore.getState().setAnim("happy");
+    usePetStore.getState().showBubble("⏳ 在想一个好笑的梗...", 0);
+
+    streamRegistry.register("joke", {
+      onToken: (token) => {
+        const store = usePetStore.getState();
+        const current = store.bubbleText || "";
+        if (current.startsWith("⏳")) {
+          store.showBubble(token, 0);
+        } else {
+          store.showBubble(current + token, 0);
+        }
+      },
+      onDone: () => {
+        const store = usePetStore.getState();
+        if (store.bubbleText) {
+          store.showBubble(store.bubbleText, 5000);
+        }
+        streamRegistry.clear();
+        tellingJoke = false;
+        setTellingJoke(false);
+      },
+      onError: () => {
+        streamRegistry.clear();
+        usePetStore.getState().showBubble("我的代码能跑，别碰它。", 5000);
+        tellingJoke = false;
+        setTellingJoke(false);
+      },
+    });
+
+    onClose();
+
+    invoke("llm_chat_stream", {
+      prompt: "请讲一个10字以内的程序员幽默梗，要搞笑、有趣、接地气。",
+      scenario: "joke",
+      history: [],
+    }).catch(() => {
+      streamRegistry.clear();
+      usePetStore.getState().showBubble("我的代码能跑，别碰它。", 5000);
+      tellingJoke = false;
+      setTellingJoke(false);
     });
   }, [onClose]);
 
@@ -134,12 +185,13 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
     { label: "💬 聊一聊 Chat", action: onChat },
     { label: "👍 夸一夸 Compliment", action: handleCompliment },
     { label: "😂 吐个槽 Roast", action: handleRoast },
+    { label: "🤣 讲个梗 Joke", action: handleJoke },
     { label: "⚙️ 设置 Settings", action: onSettings },
     { label: "🚪 退出 Quit", action: onQuit },
   ];
 
   const menuWidth = 175;
-  const menuHeight = 170;
+  const menuHeight = 200;
   const clampedX = Math.min(x, window.innerWidth - menuWidth);
   const clampedY = Math.min(y, window.innerHeight - menuHeight);
 
@@ -152,8 +204,9 @@ const ContextMenu = ({ x, y, onClose, onChat, onSettings, onQuit }: Props) => {
       {items.map((item) => {
         const isRoast = item.label.includes("吐个槽");
         const isCompliment = item.label.includes("夸一夸");
-        const disabled = (isRoast && _roasting) || (isCompliment && _complimenting);
-        const loadingText = isRoast ? "⏳ 吐槽中..." : isCompliment ? "⏳ 夸奖中..." : undefined;
+        const isJoke = item.label.includes("讲个梗");
+        const disabled = (isRoast && _roasting) || (isCompliment && _complimenting) || (isJoke && _tellingJoke);
+        const loadingText = isRoast ? "⏳ 吐槽中..." : isCompliment ? "⏳ 夸奖中..." : isJoke ? "⏳ 想梗中..." : undefined;
         return (
           <button
             key={item.label}

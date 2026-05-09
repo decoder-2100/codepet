@@ -30,7 +30,6 @@ describe("Robustness: petStore edge cases", () => {
       isCrushing: false,
       bubbleText: "",
       bubbleVisible: false,
-      bubbleAnimClass: "",
       kpm: 0,
       cumulativeCodingMinutes: 0,
       settings: null,

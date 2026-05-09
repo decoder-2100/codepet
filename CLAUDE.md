@@ -17,11 +17,17 @@ You are an autonomous development assistant. Prioritize making independent decis
 # Dev (Vite dev server + Tauri window)
 npm run tauri dev
 
-# Production build
-npm run tauri build
-
 # Frontend-only dev (no Tauri backend)
 npm run dev
+
+# Production build (portable exe + NSIS installer, static CRT linked)
+cd src-tauri
+RUSTFLAGS="-C target-feature=+crt-static" cargo tauri build --bundles nsis
+# Output: src-tauri/target/release/bundle/nsis/CodePet_<version>_x64-setup.exe
+
+# Production build (debug/experimental, no static linking)
+cd src-tauri
+cargo tauri build
 
 # Type check only
 npx tsc --noEmit

@@ -56,6 +56,7 @@ pub fn run() {
             commands::crush_bug,
             commands::random_roast,
             commands::random_compliment,
+            commands::random_joke,
             commands::save_chat_sessions,
             commands::load_chat_sessions,
             commands::get_clipboard_text,

@@ -1,7 +1,7 @@
 import { useChatStore } from "./chatStore";
 import { usePetStore } from "./petStore";
 
-type StreamType = "chat" | "roast" | "compliment" | null;
+type StreamType = "chat" | "roast" | "compliment" | "joke" | null;
 
 interface StreamHandlers {
   onToken: (token: string) => void;

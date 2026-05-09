@@ -195,6 +195,18 @@ pub async fn random_compliment() -> Result<String, AppError> {
 }
 
 #[tauri::command]
+#[tracing::instrument(skip_all, err)]
+pub async fn random_joke() -> Result<String, AppError> {
+    let settings = crate::settings::load();
+    if settings.llm.api_key.is_empty() {
+        Ok(get_random_fallback_joke())
+    } else {
+        let client = LlmClient::new(settings);
+        client.chat("给我讲一个10字以内的程序员幽默梗，要搞笑、有趣！", "joke", &[]).await
+    }
+}
+
+#[tauri::command]
 #[tracing::instrument(skip_all)]
 pub async fn get_clipboard_text() -> Result<String, String> {
     Ok(String::new())
@@ -256,6 +268,13 @@ fn get_random_fallback_roast() -> String {
     roasts[idx].clone()
 }
 
+fn get_random_fallback_joke() -> String {
+    use rand::Rng;
+    let jokes = get_all_jokes();
+    let idx = rand::thread_rng().gen_range(0..jokes.len());
+    jokes[idx].clone()
+}
+
 fn get_all_roasts() -> Vec<String> {
     vec![
         "需求又改了，第8版了……".into(),
@@ -288,6 +307,26 @@ fn get_all_roasts() -> Vec<String> {
         "工具链崩了，谁来修？".into(),
         "需求变更比翻书还快。".into(),
         "计划排得满，bug排更多。".into(),
+    ]
+}
+
+fn get_all_jokes() -> Vec<String> {
+    vec![
+        "我的代码能跑，别碰它。".into(),
+        "注释？不存在的。".into(),
+        "重启能解决99%的问题。".into(),
+        "这bug是Feature啦。".into(),
+        "在本地是好的啊！".into(),
+        "产品经理说这是小改动。".into(),
+        "Git push force出奇迹。".into(),
+        "只要测试不跑过就行。".into(),
+        "Ctrl C V 才是终极架构。".into(),
+        "删库跑路，专业对口。".into(),
+        "代码能跑，千万别动。".into(),
+        "面向搜索编程。".into(),
+        "程序员最好的工具是Sleep。".into(),
+        "这不是bug，是特性！".into(),
+        "只要我不看，bug就不存在。".into(),
     ]
 }
 

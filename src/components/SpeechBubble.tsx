@@ -4,7 +4,6 @@ import { usePetStore } from "../stores/petStore";
 const SpeechBubble = () => {
   const text = usePetStore((s) => s.bubbleText);
   const visible = usePetStore((s) => s.bubbleVisible);
-  const animClass = usePetStore((s) => s.bubbleAnimClass);
 
   const [phase, setPhase] = useState<"hidden" | "entering" | "visible" | "leaving">("hidden");
   const phaseRef = useRef(phase);
@@ -28,30 +27,14 @@ const SpeechBubble = () => {
 
   const isEntering = phase === "entering";
   const isLeaving = phase === "leaving";
-  const hasBurstAnim = animClass && (animClass === "roast-burst" || animClass === "roast-wobble" || animClass === "compliment-burst");
 
-  const bubbleStyle: React.CSSProperties = {
-    pointerEvents: "none",
-    // Burst animations handle their own transform.
-    // Non-burst: use inline translateY for enter/leave transitions.
-    transform: hasBurstAnim
-      ? undefined
-      : `translateY(${isEntering || isLeaving ? "6px" : "0px"})`,
-    opacity: hasBurstAnim ? undefined : isEntering || isLeaving ? 0 : 1,
-    transition: hasBurstAnim
-      ? undefined
-      : isEntering
-        ? "opacity 0.22s ease, transform 0.22s ease"
-        : isLeaving
-          ? "opacity 0.32s ease, transform 0.32s ease"
-          : undefined,
-  };
-
-  const className = ["speech-bubble", animClass].filter(Boolean).join(" ");
+  let animClass = "speech-bubble";
+  if (isEntering) animClass += " speech-bubble--entering";
+  if (isLeaving) animClass += " speech-bubble--leaving";
 
   return (
-    <div style={{ position: "absolute", bottom: "124px", left: "50%", transform: "translateX(-50%)" }}>
-      <div className={className} style={bubbleStyle}>
+    <div className="speech-bubble-anchor">
+      <div className={animClass}>
         {text}
         <div className="speech-bubble-tail" />
       </div>
