@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useChatStore } from "../stores/chatStore";
 import { usePetStore } from "../stores/petStore";
-import { useLLMStream } from "../hooks/useLLMStream";
+import { streamRegistry } from "../stores/streamStore";
 import { AVAILABLE_SKILLS } from "../types";
 import { normalizeSettings } from "../utils/normalizeSettings";
 
@@ -97,8 +97,6 @@ interface ChatOverlayProps {
 }
 
 export default function ChatOverlay({ onClose }: ChatOverlayProps) {
-  useLLMStream();
-
   const [input, setInput] = useState("");
   const [showHistory, setShowHistoryLocal] = useState(false);
   const [showSkills, setShowSkillsLocal] = useState(false);
@@ -185,23 +183,51 @@ export default function ChatOverlay({ onClose }: ChatOverlayProps) {
 
     try {
       setStreaming(true);
+      usePetStore.getState().showBubble("让我想想...", 0);
+
+      // Register stream callbacks so PetWindow's global router can dispatch tokens
+      streamRegistry.register("chat", {
+        onToken: (token) => {
+          const store = useChatStore.getState();
+          if (!store.currentBuffer) {
+            usePetStore.getState().hideBubble();
+          }
+          store.appendToken(token);
+        },
+        onDone: () => {
+          const store = useChatStore.getState();
+          store.flushBuffer();
+          store.setStreaming(false);
+          streamRegistry.clear();
+          usePetStore.getState().setPose("idle");
+          usePetStore.getState().setAnim("idle");
+        },
+        onError: (error) => {
+          const store = useChatStore.getState();
+          store.flushBuffer();
+          store.setStreaming(false);
+          streamRegistry.clear();
+          store.addMessage({
+            role: "pet",
+            content: `呃，AI 出了点问题：${error}`,
+          });
+          usePetStore.getState().setPose("idle");
+          usePetStore.getState().setAnim("idle");
+        },
+      });
+
       const history = useChatStore.getState().messages;
       await invoke("llm_chat_stream", { prompt: msg, scenario: finalScenario, history });
     } catch {
-      try {
-        const history = useChatStore.getState().messages;
-        const reply = await invoke<string>("llm_chat", { prompt: msg, scenario: finalScenario, history });
-        addMessage({ role: "pet", content: reply });
-      } catch {
-        addMessage({
-          role: "pet",
-          content: hasApiKey
-            ? "抱歉，请求失败了。请检查 API Key 和网络连接。"
-            : "⚙️ 还没有配置 API Key，请点击右上角齿轮图标进入设置。",
-        });
-      }
       setStreaming(false);
+      usePetStore.getState().hideBubble();
       usePetStore.getState().setAnim?.("idle");
+      addMessage({
+        role: "pet",
+        content: hasApiKey
+          ? "抱歉，请求失败了。请检查 API Key 和网络连接。"
+          : "⚙️ 还没有配置 API Key，请点击右上角齿轮图标进入设置。",
+      });
     }
   }, [input, isStreaming, addMessage, setStreaming, hasApiKey]);
 

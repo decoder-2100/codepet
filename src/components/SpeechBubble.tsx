@@ -30,25 +30,31 @@ const SpeechBubble = () => {
   const isLeaving = phase === "leaving";
   const hasBurstAnim = animClass && (animClass === "roast-burst" || animClass === "roast-wobble" || animClass === "compliment-burst");
 
-  const style: React.CSSProperties = hasBurstAnim
-    ? { pointerEvents: "none" }
-    : {
-        pointerEvents: "none",
-        opacity: isEntering || isLeaving ? 0 : 1,
-        transform: `translateX(-50%) translateY(${isEntering || isLeaving ? "6px" : "0px"})`,
-        transition: isEntering
-          ? "opacity 0.22s ease, transform 0.22s ease"
-          : isLeaving
+  const bubbleStyle: React.CSSProperties = {
+    pointerEvents: "none",
+    // Burst animations handle their own transform.
+    // Non-burst: use inline translateY for enter/leave transitions.
+    transform: hasBurstAnim
+      ? undefined
+      : `translateY(${isEntering || isLeaving ? "6px" : "0px"})`,
+    opacity: hasBurstAnim ? undefined : isEntering || isLeaving ? 0 : 1,
+    transition: hasBurstAnim
+      ? undefined
+      : isEntering
+        ? "opacity 0.22s ease, transform 0.22s ease"
+        : isLeaving
           ? "opacity 0.32s ease, transform 0.32s ease"
           : undefined,
-      };
+  };
 
   const className = ["speech-bubble", animClass].filter(Boolean).join(" ");
 
   return (
-    <div className={className} style={style}>
-      {text}
-      <div className="speech-bubble-tail" />
+    <div style={{ position: "absolute", bottom: "124px", left: "50%", transform: "translateX(-50%)" }}>
+      <div className={className} style={bubbleStyle}>
+        {text}
+        <div className="speech-bubble-tail" />
+      </div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::sync::{OnceLock, RwLock};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LlmConfig {
@@ -17,7 +18,7 @@ pub struct LlmConfig {
 }
 
 fn default_max_tokens() -> u32 {
-    1000
+    300
 }
 
 fn default_top_p() -> f64 {
@@ -166,7 +167,9 @@ fn settings_path() -> PathBuf {
     path
 }
 
-pub fn load() -> AppSettings {
+static CACHED_SETTINGS: OnceLock<RwLock<AppSettings>> = OnceLock::new();
+
+fn load_from_disk() -> AppSettings {
     let path = settings_path();
     if path.exists() {
         std::fs::read_to_string(&path)
@@ -178,10 +181,25 @@ pub fn load() -> AppSettings {
     }
 }
 
+pub fn load() -> AppSettings {
+    CACHED_SETTINGS
+        .get_or_init(|| RwLock::new(load_from_disk()))
+        .read()
+        .unwrap()
+        .clone()
+}
+
 pub fn save(settings: &AppSettings) -> Result<(), String> {
     let path = settings_path();
     let json = serde_json::to_string_pretty(settings).map_err(|e| e.to_string())?;
     std::fs::write(&path, json).map_err(|e| e.to_string())?;
+
+    // Update in-memory cache
+    if let Some(cache) = CACHED_SETTINGS.get() {
+        let mut guard = cache.write().unwrap();
+        *guard = settings.clone();
+    }
+
     Ok(())
 }
 
@@ -208,7 +226,7 @@ mod tests {
         assert_eq!(llm.provider, "deepseek");
         assert_eq!(llm.model, "deepseek-chat");
         assert_eq!(llm.temperature, 0.7);
-        assert_eq!(llm.max_tokens, 1000);
+        assert_eq!(llm.max_tokens, 300);
         assert_eq!(llm.top_p, 0.9);
         assert!(llm.api_key.is_empty());
         assert!(llm.custom_base_url.is_empty());

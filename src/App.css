@@ -255,10 +255,7 @@ canvas { border: none; outline: none; }
    Speech Bubble
    ══════════════════════════════════════════ */
 .speech-bubble {
-  position: absolute;
-  bottom: 124px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   background: var(--cp-bg);
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-radius-sm);
