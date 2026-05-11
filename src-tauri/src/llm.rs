@@ -13,7 +13,7 @@ fn get_http_client() -> &'static Client {
     LLM_CLIENT.get_or_init(|| {
         Client::builder()
             .timeout(Duration::from_secs(120))
-            .read_timeout(Duration::from_secs(10))
+            .read_timeout(Duration::from_secs(120))
             .build()
             .unwrap_or_default()
     })

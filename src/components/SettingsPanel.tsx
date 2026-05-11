@@ -52,6 +52,7 @@ function modelHint(provider: string): string {
     qwen: "推荐: qwen-max, qwen-plus, qwen-turbo",
     zhipu: "推荐: glm-4-plus, glm-4-air, glm-4-flash",
     openai: "推荐: gpt-4o, gpt-4o-mini, gpt-4.1",
+    custom: "填写你的外部模型名称（如 gpt-4o, claude-3-opus 等）",
   };
   return map[provider] ?? "";
 }
@@ -243,7 +244,7 @@ const SettingsPanel = ({ onSaved }: Props) => {
           </select>
 
           {/* Provider model hints */}
-          {local.llm.provider !== "custom" && local.llm.provider !== "baidu" && (
+          {local.llm.provider !== "baidu" && modelHint(local.llm.provider) && (
             <span style={{ fontSize: 11, color: "#888", marginTop: -8 }}>
               {modelHint(local.llm.provider)}
             </span>
@@ -270,7 +271,7 @@ const SettingsPanel = ({ onSaved }: Props) => {
           />
           <span style={{ fontSize: 11, color: "#888", marginTop: -8 }}>
             {local.llm.provider === "custom"
-              ? "填写你的外部模型 API 地址（需 OpenAI 兼容）"
+              ? "填写兼容 OpenAI 的 API 地址，需包含 /v1 路径（如 https://api.openai.com/v1）"
               : "留空使用默认地址，可覆盖为自定义端点"}
           </span>
 

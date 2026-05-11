@@ -154,7 +154,7 @@ pub async fn test_llm_connection() -> Result<String, AppError> {
         return Err(AppError::ApiKeyMissing);
     }
     let client = LlmClient::new(settings);
-    client.test_connection().await.map_err(|_e| AppError::ConnectionFailed)
+    client.test_connection().await
 }
 
 #[tauri::command]

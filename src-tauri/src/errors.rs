@@ -17,9 +17,6 @@ pub enum AppError {
 
     #[error("API key not configured")]
     ApiKeyMissing,
-
-    #[error("Connection test failed")]
-    ConnectionFailed,
 }
 
 impl AppError {
