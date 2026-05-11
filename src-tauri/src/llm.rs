@@ -42,6 +42,17 @@ fn get_provider_base_url(provider: &str) -> &str {
     PROVIDER_CONFIGS[0].1
 }
 
+fn mask_key(key: &str) -> String {
+    let len = key.len();
+    if len == 0 {
+        return "(empty)".into();
+    }
+    if len <= 8 {
+        return format!("{}... (len={})", &key[..1], len);
+    }
+    format!("{}...{} (len={})", &key[..4], &key[len-4..], len)
+}
+
 fn personality_prompt(personality: &str) -> &str {
     match personality {
         "humorous" => "性格幽默风趣，爱开玩笑，用段子帮用户缓解压力。",
@@ -141,10 +152,15 @@ impl LlmClient {
         scenario: &str,
         history: &[HistoryMessage],
     ) -> Result<String, AppError> {
-        tracing::info!(scenario, "LLM chat started");
+        let provider = &self.settings.llm.provider;
+        let model = &self.settings.llm.model;
+        let api_key = &self.settings.llm.api_key;
 
-        if self.settings.llm.api_key.is_empty() {
+        if api_key.is_empty() {
             return Err(AppError::ApiKeyMissing);
+        }
+        if api_key.len() < 10 {
+            tracing::warn!(provider, key = %mask_key(api_key), "API key seems too short, may be invalid");
         }
 
         let base_url: String = if !self.settings.llm.custom_base_url.is_empty() {
@@ -159,6 +175,17 @@ impl LlmClient {
         } else {
             format!("{}/chat/completions", base_url)
         };
+
+        tracing::info!(
+            provider,
+            model,
+            url = %url,
+            key = %mask_key(api_key),
+            scenario,
+            prompt_len = prompt.len(),
+            history_len = history.len(),
+            "LLM chat request"
+        );
 
         let mut messages = vec![json!({"role": "system", "content": self.system_prompt(scenario)})];
         for msg in history {
@@ -189,21 +216,26 @@ impl LlmClient {
         if !response.status().is_success() {
             let status = response.status();
             let body = response.text().await.unwrap_or_default();
-            tracing::error!(status = %status, body = %body, "LLM API returned error");
+            tracing::error!(status = %status, body = %body, url = %url, provider, model, "LLM chat API returned error");
             return Err(AppError::Llm(format!("API error {}: {}", status.as_u16(), body)));
         }
 
+        let status = response.status();
         let data: Value = response
             .json()
             .await
             .map_err(|e| AppError::Llm(format!("Parse failed: {}", e)))?;
 
-        tracing::info!(bytes = data.to_string().len(), "LLM chat response received");
-
         let content = data["choices"][0]["message"]["content"]
             .as_str()
             .unwrap_or("(宠物挠了挠头，没想好怎么回答)")
             .to_string();
+
+        tracing::info!(
+            status = %status,
+            content_len = content.len(),
+            "LLM chat response received"
+        );
 
         Ok(content)
     }
@@ -216,10 +248,15 @@ impl LlmClient {
         history: &[HistoryMessage],
         sender: tokio::sync::mpsc::UnboundedSender<String>,
     ) -> Result<(), AppError> {
-        tracing::info!(scenario, "LLM stream started");
+        let provider = &self.settings.llm.provider;
+        let model = &self.settings.llm.model;
+        let api_key = &self.settings.llm.api_key;
 
-        if self.settings.llm.api_key.is_empty() {
+        if api_key.is_empty() {
             return Err(AppError::ApiKeyMissing);
+        }
+        if api_key.len() < 10 {
+            tracing::warn!(provider, key = %mask_key(api_key), "API key seems too short, may be invalid");
         }
 
         let base_url: String = if !self.settings.llm.custom_base_url.is_empty() {
@@ -251,6 +288,17 @@ impl LlmClient {
             "stream": true
         });
 
+        tracing::info!(
+            provider,
+            model,
+            url = %url,
+            key = %mask_key(api_key),
+            scenario,
+            prompt_len = prompt.len(),
+            history_len = history.len(),
+            "LLM chat stream request"
+        );
+
         let response = self
             .client
             .post(&url)
@@ -264,7 +312,7 @@ impl LlmClient {
         if !response.status().is_success() {
             let status = response.status();
             let body = response.text().await.unwrap_or_default();
-            tracing::error!(status = %status, body = %body, "LLM API returned error");
+            tracing::error!(status = %status, body = %body, url = %url, provider, model, "LLM stream API returned error");
             return Err(AppError::Llm(format!("API error {}: {}", status.as_u16(), body)));
         }
 
