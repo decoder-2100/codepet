@@ -9,3 +9,10 @@ check_log.txt
 test_log.txt
 vite_build.txt
 release/
+
+# Harness workflow artifacts
+plan.md
+act.log
+observe.json
+reflect.md
+correct.patch

@@ -1,0 +1,84 @@
+{
+  "features": [
+    {
+      "id": "feat-001",
+      "name": "Pet Canvas Rendering",
+      "description": "Canvas-based pixel-art pet rendering with animation engine, parts system, and particle effects",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "renderer tests pass, 11 animations registered, animation engine integration test green"
+    },
+    {
+      "id": "feat-002",
+      "name": "Keyboard Activity Monitoring",
+      "description": "Rust rdev-based global keypress counter, emits Tauri events every 5s with KPM",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "keyboard.rs unit tests, event emission verified in useKeyboardActivity hook"
+    },
+    {
+      "id": "feat-003",
+      "name": "LLM Chat Integration",
+      "description": "Multi-provider LLM streaming (DeepSeek, Qwen, Zhipu, Baidu, OpenAI, custom) via SSE",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "llm.rs provider URL tests, personality prompt tests, skills tests pass"
+    },
+    {
+      "id": "feat-004",
+      "name": "Settings Persistence",
+      "description": "JSON-based settings store with serde defaults, backward compatibility, camelCase/snake_case normalization",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "settings.rs tests, get_settings/save_settings IPC commands verified"
+    },
+    {
+      "id": "feat-005",
+      "name": "Chat Session Management",
+      "description": "LocalStorage-persisted chat sessions with save/load/delete/new, streaming display with blinking cursor",
+      "dependencies": ["feat-003"],
+      "status": "done",
+      "evidence": "chatStore tests, ChatPanel component integration"
+    },
+    {
+      "id": "feat-006",
+      "name": "Pet Customization System",
+      "description": "6 presets, part/color picker, variant draw functions for body/head/eyes/mouth/tail/accessories",
+      "dependencies": ["feat-001"],
+      "status": "done",
+      "evidence": "PetCustomizer component, petPresets.ts data, renderer part variants"
+    },
+    {
+      "id": "feat-007",
+      "name": "Bug Drop Zone",
+      "description": "Drag-and-drop error text analysis via LLM with ASCII fallback",
+      "dependencies": ["feat-003"],
+      "status": "done",
+      "evidence": "BugDropZone component, crush_bug IPC command tests"
+    },
+    {
+      "id": "feat-008",
+      "name": "Roast System (吐个槽)",
+      "description": "Context-menu triggered roasts with LLM and hardcoded fallback, 5s speech bubble display",
+      "dependencies": ["feat-003"],
+      "status": "done",
+      "evidence": "random_roast IPC tests, ContextMenu roasting guard, SpeechBubble timing"
+    },
+    {
+      "id": "feat-009",
+      "name": "System Tray & Window Management",
+      "description": "Frameless always-on-top window at bottom-right, system tray show/settings/quit, auto-hide on inactivity",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "window_manage.rs, tray.rs, useAutoHide hook"
+    },
+    {
+      "id": "feat-010",
+      "name": "Harness Engineering Integration",
+      "description": "Architecture lint, file protection hooks, AGENTS.md contract, POARC workflow, CI-ready checks",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "lint/check-architecture.sh passes, .claude/hooks/ working, settings.json configured"
+    }
+  ]
+}

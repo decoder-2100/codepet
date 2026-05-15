@@ -1,0 +1,32 @@
+{
+  "hooks": {
+    "pretooluse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$claude_project_dir/.claude/hooks/protect-files.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$claude_project_dir/.claude/hooks/check-arch.sh\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "deny": [
+      "write:.env",
+      "write:*.pem",
+      "write:*.key",
+      "write:*.pfx",
+      "write:*.p12",
+      "write:.git/**",
+      "write:config/secrets/**",
+      "write:credentials.json",
+      "write:settings.xml"
+    ]
+  }
+}
