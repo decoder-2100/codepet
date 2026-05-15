@@ -79,6 +79,158 @@
       "dependencies": [],
       "status": "done",
       "evidence": "lint/check-architecture.sh passes, .claude/hooks/ working, settings.json configured"
+    },
+    {
+      "id": "feat-011",
+      "name": "Crash Recovery & Health Monitoring",
+      "description": "Custom panic hook writes crash marker to %APPDATA%, crash-recovery event on next startup, graceful shutdown with keyboard/stream stop + tokio drain",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "crash.rs, shutdown.rs, lib.rs crash marker detection"
+    },
+    {
+      "id": "feat-012",
+      "name": "Structured Logging System",
+      "description": "tracing-based logging: debug mode with colored stdout, release mode with rolling daily JSON logs in %APPDATA%/coderpet/logs/",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "logging.rs, tracing crate integration, diagnostic logging in llm.rs"
+    },
+    {
+      "id": "feat-013",
+      "name": "Compliment & Joke System",
+      "description": "Context menu items for random_compliment and random_joke with LLM-generated and static fallbacks",
+      "dependencies": ["feat-003"],
+      "status": "done",
+      "evidence": "random_compliment and random_joke IPC commands in commands.rs, ContextMenu integration"
+    },
+    {
+      "id": "feat-014",
+      "name": "Session File Persistence",
+      "description": "Chat sessions saved to coderpet_sessions.json on disk via IPC (save_chat_sessions/load_chat_sessions), with localStorage fallback",
+      "dependencies": ["feat-005"],
+      "status": "done",
+      "evidence": "save_chat_sessions and load_chat_sessions IPC commands, chatStore backend sync"
+    },
+    {
+      "id": "feat-015",
+      "name": "Chat Overlay Window",
+      "description": "Full streaming chat overlay in pet window with markdown rendering, history sidebar, skills panel, provider/model status display",
+      "dependencies": ["feat-003", "feat-005"],
+      "status": "done",
+      "evidence": "ChatOverlay.tsx (540 lines), PetWindow.tsx integration, streamStore event routing"
+    },
+    {
+      "id": "feat-016",
+      "name": "Dedicated Settings Window",
+      "description": "Separate settings window (460x620, resizable, solid background) with multi-tab UI: character, customizer, LLM, general",
+      "dependencies": ["feat-004", "feat-006"],
+      "status": "done",
+      "evidence": "SettingsWindow.tsx, SettingsPanel.tsx (4 tabs), window_manage.rs create_settings_window"
+    },
+    {
+      "id": "feat-017",
+      "name": "Stream Control Infrastructure",
+      "description": "Per-stream stop-flag registry using Arc<AtomicBool> with register_stream/stop_all/unregister_stream, mpsc token relay",
+      "dependencies": ["feat-003"],
+      "status": "done",
+      "evidence": "stream_control.rs, llm_stop_stream IPC, mpsc channel in llm_chat_stream"
+    },
+    {
+      "id": "feat-018",
+      "name": "Connection Testing",
+      "description": "Test LLM API connectivity via test_llm_connection IPC command with provider-specific validation",
+      "dependencies": ["feat-003"],
+      "status": "done",
+      "evidence": "test_llm_connection IPC command, SettingsPanel LLM tab connection test UI"
+    },
+    {
+      "id": "feat-019",
+      "name": "Error Type System",
+      "description": "AppError enum (Llm, Settings, Io, ApiKeyMissing) with Serialize for IPC responses, thiserror integration",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "errors.rs, thiserror derive, Serialize for Tauri command responses"
+    },
+    {
+      "id": "backlog-001",
+      "name": "Clipboard Integration",
+      "description": "Wire up get_clipboard_text IPC using tauri-plugin-clipboard-manager. Currently returns empty string. Enable native clipboard for bug drop zone fallback and paste-from-clipboard feature.",
+      "dependencies": [],
+      "status": "backlog",
+      "evidence": ""
+    },
+    {
+      "id": "backlog-002",
+      "name": "Code Review Flow",
+      "description": "Add dedicated code_review scenario instruction in build_system_prompt() and a dedicated IPC command that accepts code snippets for review. Currently code_review is listed in AVAILABLE_SKILLS but has no dedicated flow.",
+      "dependencies": ["feat-003"],
+      "status": "backlog",
+      "evidence": ""
+    },
+    {
+      "id": "backlog-003",
+      "name": "Pet Mood & Affection System",
+      "description": "Add click-to-pet interaction, feeding mechanic, mood states (happy/sad/bored), and affinity tracking. Pet-click animation exists but has no stateful response.",
+      "dependencies": ["feat-001"],
+      "status": "backlog",
+      "evidence": ""
+    },
+    {
+      "id": "backlog-004",
+      "name": "Desktop Notifications",
+      "description": "Wire up tauri-plugin-notification for rest reminders and pet attention requests. Plugin is installed but unused.",
+      "dependencies": [],
+      "status": "backlog",
+      "evidence": ""
+    },
+    {
+      "id": "backlog-005",
+      "name": "Achievement & Milestone System",
+      "description": "Power achievements from cumulative coding minutes counter: '100 hours of coding', 'first bug crushed', '10 roasts requested', etc.",
+      "dependencies": ["feat-002", "feat-007", "feat-008"],
+      "status": "backlog",
+      "evidence": ""
+    },
+    {
+      "id": "backlog-006",
+      "name": "Pet Preset Share/Import/Export",
+      "description": "Save/load pet configurations as shareable JSON files. Import via file picker or clipboard paste, export to file.",
+      "dependencies": ["feat-006", "backlog-001"],
+      "status": "backlog",
+      "evidence": ""
+    },
+    {
+      "id": "backlog-007",
+      "name": "Clean Up ChatPanel Dead Code",
+      "description": "ChatPanel.tsx is a near-duplicate of ChatOverlay.tsx and not rendered anywhere. Either integrate it as a standalone chat window or remove to reduce duplication.",
+      "dependencies": [],
+      "status": "backlog",
+      "evidence": ""
+    },
+    {
+      "id": "backlog-008",
+      "name": "Rust Module Test Coverage",
+      "description": "Add unit tests for keyboard.rs, window_manage.rs, tray.rs, shutdown.rs, crash.rs, logging.rs, errors.rs, and stream_control.rs. Currently only commands.rs, llm.rs, and settings.rs have tests.",
+      "dependencies": [],
+      "status": "backlog",
+      "evidence": ""
+    },
+    {
+      "id": "backlog-009",
+      "name": "Multi-Pet Support",
+      "description": "Extend architecture to support multiple pets on screen simultaneously. Requires PetConfig array in state, multi-pet renderer, and per-pet animation management.",
+      "dependencies": ["feat-001", "feat-006"],
+      "status": "backlog",
+      "evidence": ""
+    },
+    {
+      "id": "backlog-010",
+      "name": "Additional Skins & Theme Editor",
+      "description": "Add more UI skins beyond current 3 (matrix, retro, hologram). Build a custom color picker for user-defined themes.",
+      "dependencies": [],
+      "status": "backlog",
+      "evidence": ""
     }
   ]
 }
