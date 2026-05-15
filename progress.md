@@ -7,6 +7,7 @@
 - **Harness committed** — `f01f277` feat: add harness engineering infrastructure (12 files)
 - **Feature list expanded** — 19 features (10 original + 9 newly discovered), 10 backlog items defined
 - **Backlog defined** — clipboard integration, code review flow, pet mood system, notifications, achievements, preset sharing, dead code cleanup, Rust test coverage, multi-pet, theme editor
+- **Subsystem improvements committed** — memory persistence, CI verification, scope rules
 
 ### In Progress
 
@@ -18,7 +19,7 @@
 
 ### Notes
 
-- Harness follows 5-subsystem framework: Instructions (AGENTS.md + CLAUDE.md), State (feature_list.json + progress.md), Verification (init.sh + check-architecture.sh), Scope (AGENTS.md layer rules), Lifecycle (hooks + POARC + session-handoff.md)
+- Harness follows 5-subsystem framework: Instructions (AGENTS.md + CLAUDE.md), State (feature_list.json + progress.md), Verification (init.sh + check-architecture.sh + CI), Scope (AGENTS.md layer rules + scope boundaries), Lifecycle (hooks + POARC + session-handoff.md + memory)
 - All architecture lint checks passing — frontend layers (L0-L3) clean, backend layers clean
 - Hooks tested: .env/.pem/.key/.git/ blocked, normal .tsx files pass
 
@@ -34,3 +35,9 @@
 8. `backlog-006` — Pet preset share/import/export
 9. `backlog-009` — Multi-pet support (architectural change)
 10. `backlog-010` — Additional skins & theme editor
+
+### Harness Improvements
+
+- **Memory persistence** — 6 memory files in `.claude/memory/` covering architecture rules, workflow, verification, session-end, agent prefs, project scope
+- **CI verification** — GitHub Actions workflow (`.github/workflows/ci.yml`) with lint, type check, tests, Rust check, clippy
+- **Scope rules** — AGENTS.md updated with scope boundaries, memory update requirements, CI in DoD checklist

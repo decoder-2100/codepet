@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: "-C target-feature=+crt-static"
+
+jobs:
+  lint:
+    name: Lint & Type Check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Frontend type check
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npm test
+
+      - name: Architecture lint
+        run: bash lint/check-architecture.sh
+
+  rust-check:
+    name: Rust Check & Tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+
+      - name: Cargo check
+        run: cd src-tauri && cargo check
+
+      - name: Cargo test
+        run: cd src-tauri && cargo test
+
+      - name: Cargo clippy
+        run: cd src-tauri && cargo clippy -- -D warnings

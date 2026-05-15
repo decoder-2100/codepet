@@ -46,10 +46,21 @@ Before coding:
 
 ## Working Rules
 
-- One feature at a time, following `feature_list.json` status
-- Verification required before claiming done (see Definition of Done below)
-- Update `progress.md` before ending any session
-- No cross-layer imports — validated by pre-edit hooks
+- One feature at a time, following `feature_list.json` status. Do not start a new feature until the current one is complete and verified.
+- Before picking a backlog item, check its dependencies in `feature_list.json` — blocked features must wait.
+- Verification required before claiming done (see Definition of Done below).
+- Update `progress.md` before ending any session.
+- No cross-layer imports — validated by pre-edit hooks.
+- Memory persistence: write important decisions, user corrections, and project context to `.claude/memory/` as they are discovered. Update `MEMORY.md` index.
+- Keep memory files short — index caps fire silently. Only store what cannot be derived from the codebase.
+
+## Scope Boundaries
+
+- CodePet is a transparent overlay pet app (500×700 frameless), not a full IDE.
+- All features must work within the transparent, borderless, always-on-top window constraints.
+- Don't add features that require a full windowed IDE experience.
+- Backlog is tracked in `feature_list.json` with `status: "backlog"` items. Priority order is in `progress.md`.
+- When implementing a feature, scope decisions should favor the overlay-appropriate constraint over developer ergonomics.
 
 ## Enforcement
 
@@ -65,8 +76,12 @@ A feature is done when:
 - [ ] `bash init.sh` passes (type check, tests, architecture lint)
 - [ ] `bash lint/check-architecture.sh` passes
 - [ ] `npx tsc --noEmit` passes
+- [ ] `npm test` passes
+- [ ] `cd src-tauri && cargo test` passes
+- [ ] CI workflow passes (`.github/workflows/ci.yml`)
 - [ ] Progress updated in `progress.md`
-- [ ] `feature_list.json` status updated
+- [ ] `feature_list.json` status updated with evidence
+- [ ] Memory updated in `.claude/memory/` if new decisions or corrections were made
 
 ## End of Session
 

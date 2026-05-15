@@ -1,6 +1,8 @@
-# CLAUDE.md
+# CLAUDE.md — CodePet
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+**Harness Mode: ENABLED** | Architecture Contract: [AGENTS.md](AGENTS.md) | Memory: [.claude/memory/MEMORY.md](.claude/memory/MEMORY.md)
+
+> Every session: read [AGENTS.md](AGENTS.md) first, then review [.claude/memory/](.claude/memory/) for cross-session context. All layer rules, dependency constraints, and prohibited behaviors are defined there. This file provides project context and tooling commands.
 
 ## Assistant Behavior
 
